@@ -14,8 +14,8 @@ use vector::Vec3;
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
-    let samples = 100;
-    let max_depth = 50;
+    let samples = 50;
+    let max_depth = 10;
     let camera = Camera::new(aspect_ratio, image_width, samples, max_depth);
 
     let mut world = HitList::new();

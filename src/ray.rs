@@ -27,7 +27,7 @@ impl Ray {
         }
 
         if world.hit(self, Interval::positive(), &mut record) {
-            let direction = Vec3::random_on_hemisphere(&record.normal);
+            let direction = record.normal + Vec3::random_unit_vector();
             return 0.5 * Ray::new(record.point, direction).color(world, depth - 1);
         }
 

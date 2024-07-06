@@ -10,17 +10,21 @@ impl Color {
     }
 }
 
+fn linear_to_gamma(linear_component: f64) -> f64 {
+    linear_component.sqrt()
+}
+
 pub fn write_color(writer: &mut BufWriter<File>, color: Color, samples: i32) {
     let scale = 1.0 / samples as f64;
     let intensity = Interval::new(0.0, 0.999);
 
-    let r = intensity.clamp(color.x * scale);
-    let g = intensity.clamp(color.y * scale);
-    let b = intensity.clamp(color.z * scale);
+    let r = linear_to_gamma(color.x * scale);
+    let g = linear_to_gamma(color.y * scale);
+    let b = linear_to_gamma(color.z * scale);
 
-    let r = (r * 255.999) as i32;
-    let g = (g * 255.999) as i32;
-    let b = (b * 255.999) as i32;
+    let r = (intensity.clamp(r) * 255.999) as i32;
+    let g = (intensity.clamp(g) * 255.999) as i32;
+    let b = (intensity.clamp(b) * 255.999) as i32;
 
     let line = format!("{r} {g} {b}\n");
     writer.write_all(line.as_bytes()).unwrap();
