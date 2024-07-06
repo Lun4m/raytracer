@@ -4,11 +4,15 @@ use std::{
 };
 
 mod color;
+mod hittables;
 mod ray;
+mod sphere;
 mod vector;
 
 use color::write_color;
+use hittables::HitList;
 use ray::Ray;
+use sphere::Sphere;
 use vector::Vec3;
 
 fn main() -> std::io::Result<()> {
@@ -41,6 +45,10 @@ fn main() -> std::io::Result<()> {
     let header = format!("P3\n{image_width} {image_height}\n255\n");
     writer.write_all(header.as_bytes()).unwrap();
 
+    let mut world = HitList::new();
+    world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
+
     for j in 0..image_height {
         print!("\rScanlines remaining: {}", image_height - j);
         stdout().flush().unwrap();
@@ -50,10 +58,10 @@ fn main() -> std::io::Result<()> {
 
             // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
             let ray = Ray::new(camera_center, ray_direction);
-            write_color(&mut writer, ray.color())
+            write_color(&mut writer, ray.color(&world))
         }
     }
 
-    print!("\rDone.                 \n");
+    print!("\rDone.                   \n");
     Ok(())
 }
