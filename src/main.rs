@@ -4,13 +4,36 @@ use std::{
 };
 
 mod color;
+mod ray;
 mod vector;
 
-use color::{write_color, Color};
+use color::write_color;
+use ray::Ray;
+use vector::Vec3;
 
 fn main() -> std::io::Result<()> {
-    let image_width = 256;
-    let image_height = 256;
+    // image setup
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+    let image_height = (image_width as f64 / aspect_ratio) as i32;
+
+    // camera setup
+    let focal_len = 1.0;
+    let viewport_height = 2.0;
+    let viewport_width = viewport_height * aspect_ratio;
+    let camera_center = Vec3::new(0.0, 0.0, 0.0);
+
+    // vievport vectors
+    let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
+    let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+
+    let pixel_delta_u = viewport_u / image_width;
+    let pixel_delta_v = viewport_v / image_width;
+
+    let viewport_upperleft =
+        camera_center - Vec3::new(0.0, 0.0, focal_len) - 0.5 * (viewport_u + viewport_v);
+
+    let pixel_00 = viewport_upperleft + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     let file = File::create("out.ppm")?;
     let mut writer = BufWriter::new(file);
@@ -22,14 +45,15 @@ fn main() -> std::io::Result<()> {
         print!("\rScanlines remaining: {}", image_height - j);
         stdout().flush().unwrap();
         for i in 0..image_width {
-            let pixel_color = Color::new(
-                i as f64 / (image_width - 1) as f64,
-                j as f64 / (image_width - 1) as f64,
-                0.0,
-            );
-            write_color(&mut writer, pixel_color)
+            let pixel_center = pixel_00 + (i * pixel_delta_u) + (j * pixel_delta_v);
+            let ray_direction = pixel_center - camera_center;
+
+            // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
+            let ray = Ray::new(camera_center, ray_direction);
+            write_color(&mut writer, ray.color())
         }
     }
 
+    print!("\rDone.                 \n");
     Ok(())
 }

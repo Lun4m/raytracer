@@ -1,6 +1,6 @@
 use std::ops::{self};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -28,12 +28,6 @@ impl Vec3 {
 
     pub fn near_zero(self) -> bool {
         (self.x.abs() < EPS) && (self.x.abs() < EPS) && (self.x.abs() < EPS)
-    }
-}
-
-impl Default for Vec3 {
-    fn default() -> Self {
-        Self::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -85,6 +79,15 @@ impl ops::Mul<f64> for Vec3 {
     }
 }
 
+impl ops::Mul<i32> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        let rhs = rhs as f64;
+        Vec3::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
+}
+
 impl ops::Mul for Vec3 {
     type Output = Vec3;
 
@@ -101,6 +104,14 @@ impl ops::Mul<Vec3> for f64 {
     }
 }
 
+impl ops::Mul<Vec3> for i32 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        rhs * self as f64
+    }
+}
+
 impl ops::Div for Vec3 {
     type Output = Vec3;
 
@@ -113,6 +124,15 @@ impl ops::Div<f64> for Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: f64) -> Self::Output {
+        Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs)
+    }
+}
+
+impl ops::Div<i32> for Vec3 {
+    type Output = Vec3;
+
+    fn div(self, rhs: i32) -> Self::Output {
+        let rhs = rhs as f64;
         Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs)
     }
 }
