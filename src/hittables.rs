@@ -1,10 +1,11 @@
 use crate::{
+    interval::Interval,
     ray::Ray,
     vector::{dot, Vec3},
 };
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, tmin: f64, tmax: f64, record: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool;
 }
 
 #[derive(Debug, Default)]
@@ -41,13 +42,17 @@ pub struct HitList {
 }
 
 impl Hittable for HitList {
-    fn hit(&self, ray: &Ray, tmin: f64, tmax: f64, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool {
         let mut hit_anything = false;
-        let mut closest_so_far = tmax;
+        let mut closest_so_far = ray_hit.max;
         let mut temp_record = HitRecord::default();
 
         for obj in &self.objects {
-            if obj.hit(ray, tmin, closest_so_far, &mut temp_record) {
+            if obj.hit(
+                ray,
+                Interval::new(ray_hit.min, closest_so_far),
+                &mut temp_record,
+            ) {
                 hit_anything = true;
                 closest_so_far = temp_record.t;
                 record.update(&temp_record);

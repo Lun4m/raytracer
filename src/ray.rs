@@ -1,9 +1,8 @@
-use std::f64::INFINITY;
-
 use crate::{
     color::Color,
     hittables::{HitRecord, Hittable},
-    vector::{dot, unit_vector, Vec3},
+    interval::Interval,
+    vector::{unit_vector, Vec3},
 };
 
 #[derive(Default)]
@@ -22,7 +21,7 @@ impl Ray {
 
     pub fn color(&self, world: &impl Hittable) -> Color {
         let mut record = HitRecord::default();
-        if world.hit(self, 0.0, INFINITY, &mut record) {
+        if world.hit(self, Interval::positive(), &mut record) {
             return 0.5 * (record.normal + Color::full());
         }
 
