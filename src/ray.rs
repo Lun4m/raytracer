@@ -18,8 +18,11 @@ impl Ray {
     }
 
     pub fn color(&self) -> Color {
-        if self.hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5) {
-            return Color::new(1.0, 0.0, 0.0);
+        let sphere = Vec3::new(0.0, 0.0, -1.0);
+        let t = self.hit_sphere(sphere, 0.5);
+        if t > 0.0 {
+            let normal = unit_vector(self.at(t) - sphere);
+            return 0.5 * Color::from(normal + 1.0);
         }
 
         let unit_direction = unit_vector(self.direction);
@@ -29,13 +32,17 @@ impl Ray {
     }
 
     /// Solves a quadratic equation to determine if the sphere was hit by the ray
-    fn hit_sphere(&self, center: Vec3, radius: f64) -> bool {
+    fn hit_sphere(&self, center: Vec3, radius: f64) -> f64 {
         let oc = center - self.origin;
-        let a = dot(&self.direction, &self.direction);
-        let b = -2.0 * dot(&oc, &self.direction);
-        let c = dot(&oc, &oc) - radius * radius;
-        let discriminant = b * b - 4.0 * a * c;
+        let a = self.direction.len_squared();
+        let half_b = dot(&oc, &self.direction);
+        let c = oc.len_squared() - radius * radius;
+        let discriminant = half_b * half_b - a * c;
 
-        discriminant >= 0.0
+        if discriminant < 0.0 {
+            return -1.0;
+        }
+
+        (half_b - discriminant.sqrt()) / a
     }
 }

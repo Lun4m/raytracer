@@ -9,7 +9,7 @@ mod vector;
 
 use color::write_color;
 use ray::Ray;
-use vector::{dot, Vec3};
+use vector::Vec3;
 
 fn main() -> std::io::Result<()> {
     // image setup
@@ -28,7 +28,7 @@ fn main() -> std::io::Result<()> {
     let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
 
     let pixel_delta_u = viewport_u / image_width;
-    let pixel_delta_v = viewport_v / image_width;
+    let pixel_delta_v = viewport_v / image_height;
 
     let viewport_upperleft =
         camera_center - Vec3::new(0.0, 0.0, focal_len) - 0.5 * (viewport_u + viewport_v);
