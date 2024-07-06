@@ -15,7 +15,8 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let samples = 100;
-    let camera = Camera::new(aspect_ratio, image_width, samples);
+    let max_depth = 50;
+    let camera = Camera::new(aspect_ratio, image_width, samples, max_depth);
 
     let mut world = HitList::new();
     world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));

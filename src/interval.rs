@@ -26,7 +26,7 @@ impl Interval {
 
     pub fn positive() -> Self {
         Interval {
-            min: 0.0,
+            min: 0.001,
             max: INFINITY,
         }
     }

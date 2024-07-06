@@ -23,10 +23,12 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     // Number of ray casted per each pixel
     samples: i32,
+    // Max number of ray bounces
+    max_depth: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32, samples: i32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: i32, samples: i32, max_depth: i32) -> Self {
         // image setup
         let image_height = (image_width as f64 / aspect_ratio) as i32;
 
@@ -57,6 +59,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             samples,
+            max_depth,
         }
     }
 
@@ -73,7 +76,7 @@ impl Camera {
                 let mut pixel_color = Color::default();
                 for _ in 0..self.samples {
                     let ray = self.get_ray(i, j);
-                    pixel_color += ray.color(&world);
+                    pixel_color += ray.color(&world, self.max_depth);
                 }
                 write_color(&mut writer, pixel_color, self.samples)
             }

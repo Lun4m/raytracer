@@ -1,5 +1,11 @@
 use std::ops::{self};
 
+use rand::random;
+
+fn random_in_interval(min: f64, max: f64) -> f64 {
+    min + (max - min) * random::<f64>()
+}
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
     pub x: f64,
@@ -23,7 +29,37 @@ impl Vec3 {
     }
 
     pub fn random() -> Self {
-        todo!()
+        Vec3::new(random(), random(), random())
+    }
+
+    pub fn random_min_max(min: f64, max: f64) -> Self {
+        Vec3::new(
+            random_in_interval(min, max),
+            random_in_interval(min, max),
+            random_in_interval(min, max),
+        )
+    }
+
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let v = Vec3::random_min_max(-1.0, 1.0);
+            if v.len_squared() < 1.0 {
+                return v;
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Self {
+        unit_vector(Vec3::random_in_unit_sphere())
+    }
+
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if dot(&on_unit_sphere, normal) > 0.0 {
+            return on_unit_sphere;
+        } else {
+            return -on_unit_sphere;
+        }
     }
 
     pub fn near_zero(self) -> bool {
@@ -183,8 +219,4 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
 
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.len()
-}
-
-pub fn random_in_unit_sphere() {
-    todo!()
 }

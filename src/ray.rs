@@ -19,10 +19,16 @@ impl Ray {
         self.origin + t * self.direction
     }
 
-    pub fn color(&self, world: &impl Hittable) -> Color {
+    pub fn color(&self, world: &impl Hittable, depth: i32) -> Color {
         let mut record = HitRecord::default();
+
+        if depth <= 0 {
+            return Color::default();
+        }
+
         if world.hit(self, Interval::positive(), &mut record) {
-            return 0.5 * (record.normal + Color::full());
+            let direction = Vec3::random_on_hemisphere(&record.normal);
+            return 0.5 * Ray::new(record.point, direction).color(world, depth - 1);
         }
 
         let unit_direction = unit_vector(self.direction);
