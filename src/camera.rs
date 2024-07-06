@@ -3,7 +3,14 @@ use std::{
     io::{stdout, BufWriter, Write},
 };
 
-use crate::{color::write_color, hittables::HitList, ray::Ray, vector::Vec3};
+use rand::random;
+
+use crate::{
+    color::{write_color, Color},
+    hittables::HitList,
+    ray::Ray,
+    vector::Vec3,
+};
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -14,10 +21,12 @@ pub struct Camera {
     pixel_00: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    // Number of ray casted per each pixel
+    samples: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: i32, samples: i32) -> Self {
         // image setup
         let image_height = (image_width as f64 / aspect_ratio) as i32;
 
@@ -47,6 +56,7 @@ impl Camera {
             pixel_00,
             pixel_delta_u,
             pixel_delta_v,
+            samples,
         }
     }
 
@@ -60,17 +70,30 @@ impl Camera {
             print!("\rScanlines remaining: {}", self.image_height - j);
             stdout().flush().unwrap();
             for i in 0..self.image_width {
-                let pixel_center =
-                    self.pixel_00 + (i * self.pixel_delta_u) + (j * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-
-                // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
-                let ray = Ray::new(self.center, ray_direction);
-                write_color(&mut writer, ray.color(&world))
+                let mut pixel_color = Color::default();
+                for _ in 0..self.samples {
+                    let ray = self.get_ray(i, j);
+                    pixel_color += ray.color(&world);
+                }
+                write_color(&mut writer, pixel_color, self.samples)
             }
         }
 
         print!("\rDone.                   \n");
         Ok(())
+    }
+
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
+        let pixel_center = self.pixel_00 + (i * self.pixel_delta_u) + (j * self.pixel_delta_v);
+        let ray_direction = pixel_center + self.pixel_sample_square();
+
+        // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
+        Ray::new(self.center, ray_direction)
+    }
+
+    fn pixel_sample_square(&self) -> Vec3 {
+        let px = -0.5 + random::<f64>();
+        let py = -0.5 + random::<f64>();
+        (px * self.pixel_delta_u) + (py * self.pixel_delta_v)
     }
 }

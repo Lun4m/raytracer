@@ -14,7 +14,8 @@ use vector::Vec3;
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
-    let camera = Camera::new(aspect_ratio, image_width);
+    let samples = 100;
+    let camera = Camera::new(aspect_ratio, image_width, samples);
 
     let mut world = HitList::new();
     world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
