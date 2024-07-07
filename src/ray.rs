@@ -1,8 +1,9 @@
 use crate::{
     color::Color,
-    hittables::{HitRecord, Hittable},
+    hittables::HitRecord,
     interval::Interval,
     vector::{unit_vector, Vec3},
+    world::World,
 };
 
 #[derive(Default)]
@@ -19,7 +20,8 @@ impl Ray {
         self.origin + t * self.direction
     }
 
-    pub fn color(&self, world: &impl Hittable, depth: i32) -> Color {
+    // TODO: refactor this function, it's a bit messy with the default HitRecord
+    pub fn color(&self, world: &World, depth: i32) -> Color {
         let mut record = HitRecord::default();
 
         if depth <= 0 {
@@ -27,8 +29,12 @@ impl Ray {
         }
 
         if world.hit(self, Interval::positive(), &mut record) {
-            let direction = record.normal + Vec3::random_unit_vector();
-            return 0.5 * Ray::new(record.point, direction).color(world, depth - 1);
+            match record.material.scatter(self, &record) {
+                Some((ray_scattered, attenuation)) => {
+                    return attenuation * ray_scattered.color(world, depth - 1)
+                }
+                None => return Color::default(),
+            }
         }
 
         let unit_direction = unit_vector(self.direction);

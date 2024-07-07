@@ -1,17 +1,14 @@
 use crate::{
-    interval::Interval,
+    material::Material,
     ray::Ray,
     vector::{dot, Vec3},
 };
 
-pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool;
-}
-
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
+    pub material: Material,
     pub t: f64,
     pub front_face: bool,
 }
@@ -29,48 +26,11 @@ impl HitRecord {
         };
     }
 
-    fn update(&mut self, other: &HitRecord) {
+    pub fn update(&mut self, other: &HitRecord) {
         self.point = other.point;
         self.normal = other.normal;
         self.t = other.t;
+        self.material = other.material.clone();
         self.front_face = other.front_face;
-    }
-}
-
-pub struct HitList {
-    objects: Vec<Box<dyn Hittable>>,
-}
-
-impl Hittable for HitList {
-    fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool {
-        let mut hit_anything = false;
-        let mut closest_so_far = ray_hit.max;
-        let mut temp_record = HitRecord::default();
-
-        for obj in &self.objects {
-            if obj.hit(
-                ray,
-                Interval::new(ray_hit.min, closest_so_far),
-                &mut temp_record,
-            ) {
-                hit_anything = true;
-                closest_so_far = temp_record.t;
-                record.update(&temp_record);
-            }
-        }
-
-        hit_anything
-    }
-}
-
-impl HitList {
-    pub fn new() -> Self {
-        HitList {
-            objects: Vec::new(),
-        }
-    }
-
-    pub fn add(&mut self, obj: Box<dyn Hittable>) {
-        self.objects.push(obj);
     }
 }

@@ -56,9 +56,9 @@ impl Vec3 {
     pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
         let on_unit_sphere = Vec3::random_unit_vector();
         if dot(&on_unit_sphere, normal) > 0.0 {
-            return on_unit_sphere;
+            on_unit_sphere
         } else {
-            return -on_unit_sphere;
+            -on_unit_sphere
         }
     }
 
@@ -219,4 +219,8 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
 
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.len()
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    (*v) - 2.0 * dot(v, n) * (*n)
 }

@@ -4,12 +4,13 @@ use std::{
 };
 
 use rand::random;
+use rayon::prelude::*;
 
 use crate::{
-    color::{write_color, Color},
-    hittables::HitList,
+    color::{get_color, write_color, Color},
     ray::Ray,
     vector::Vec3,
+    world::World,
 };
 
 pub struct Camera {
@@ -63,24 +64,41 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: HitList) -> std::io::Result<()> {
+    pub fn render(&self, world: World) -> std::io::Result<()> {
         let file = File::create("out.ppm")?;
         let mut writer = BufWriter::new(file);
 
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height);
         writer.write_all(header.as_bytes()).unwrap();
-        for j in 0..self.image_height {
-            print!("\rScanlines remaining: {}", self.image_height - j);
-            stdout().flush().unwrap();
-            for i in 0..self.image_width {
-                let mut pixel_color = Color::default();
-                for _ in 0..self.samples {
-                    let ray = self.get_ray(i, j);
-                    pixel_color += ray.color(&world, self.max_depth);
+
+        let lines: Vec<&[u8]> = (0..self.image_height)
+            .into_par_iter()
+            .map(|j| {
+                // for j in 0..self.image_height {
+                // TODO: this print won't work in parallel
+                print!("\rScanlines remaining: {}", self.image_height - j);
+                stdout().flush().unwrap();
+
+                let out = Vec::new();
+                for i in 0..self.image_width {
+                    let mut pixel_color = Color::default();
+
+                    for _ in 0..self.samples {
+                        let ray = self.get_ray(i, j);
+                        pixel_color += ray.color(&world, self.max_depth);
+                    }
+                    // TODO: to use par_iter we need to collect the colors
+                    // and then write them at the end outside this closure
+
+                    // write_color(&mut writer, pixel_color, self.samples)
+                    out.push(get_color(pixel_color, self.samples).as_bytes())
                 }
-                write_color(&mut writer, pixel_color, self.samples)
-            }
-        }
+                out
+            })
+            .collect()
+            .into_iter()
+            .flatten()
+            .collect();
 
         print!("\rDone.                   \n");
         Ok(())
