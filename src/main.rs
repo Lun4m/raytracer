@@ -22,10 +22,20 @@ fn main() {
     let max_depth = 10;
     let camera = Camera::new(aspect_ratio, image_width, samples, max_depth);
 
-    let ground = Material::Lambertian(Color::new(0.8, 0.8, 0.0));
-    let center = Material::Lambertian(Color::new(0.1, 0.2, 0.5));
-    let left = Material::Metal((Color::new(0.8, 0.8, 0.8), 0.3));
-    let right = Material::Metal((Color::new(0.8, 0.6, 0.2), 1.0));
+    let ground = Material::Lambertian {
+        albedo: Color::new(0.8, 0.8, 0.0),
+    };
+    let center = Material::Lambertian {
+        albedo: Color::new(0.1, 0.2, 0.5),
+    };
+    let left = Material::Metal {
+        albedo: Color::new(0.8, 0.8, 0.8),
+        fuzz: 0.3,
+    };
+    let right = Material::Metal {
+        albedo: Color::new(0.8, 0.6, 0.2),
+        fuzz: 1.0,
+    };
 
     let mut world = World::new();
     world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, ground));

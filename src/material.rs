@@ -7,8 +7,8 @@ use crate::{
 
 #[derive(Clone)]
 pub enum Material {
-    Lambertian(Color),
-    Metal((Color, f64)),
+    Lambertian { albedo: Color },
+    Metal { albedo: Color, fuzz: f64 },
     Empty,
 }
 
@@ -21,7 +21,7 @@ impl Default for Material {
 impl Material {
     pub fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
         match self {
-            Material::Lambertian(albedo) => {
+            Material::Lambertian { albedo } => {
                 let scatter_direction = record.normal + Vec3::random_unit_vector();
 
                 if scatter_direction.near_zero() {
@@ -30,7 +30,7 @@ impl Material {
 
                 Some((Ray::new(record.point, scatter_direction), *albedo))
             }
-            Material::Metal((albedo, fuzz)) => {
+            Material::Metal { albedo, fuzz } => {
                 let reflected = unit_vector(reflect(&ray.direction, &record.normal))
                     + *fuzz * Vec3::random_unit_vector();
 
