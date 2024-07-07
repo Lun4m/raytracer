@@ -68,11 +68,11 @@ impl Camera {
         let mut writer = BufWriter::new(file);
 
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height);
-        writer.write_all(header.as_bytes()).unwrap();
+        writer.write_all(header.as_bytes())?;
 
         for j in 0..self.image_height {
-            print!("\rScanlines remaining: {}", self.image_height - j);
-            stdout().flush().unwrap();
+            print!("\rScanlines remaining: {:>3}", self.image_height - j);
+            stdout().flush()?;
 
             (0..self.image_width)
                 .into_par_iter()
@@ -87,10 +87,11 @@ impl Camera {
                 })
                 .collect::<Vec<String>>()
                 .into_iter()
+                // TODO: fix this unwrap?
                 .for_each(|color| writer.write_all(color.as_bytes()).unwrap());
         }
 
-        println!("\rDone.                     ");
+        println!("\rDone!                   ");
         Ok(())
     }
 
