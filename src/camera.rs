@@ -7,7 +7,7 @@ use rand::random;
 use rayon::prelude::*;
 
 use crate::{
-    color::{get_color, write_color, Color},
+    color::{get_color, Color},
     ray::Ray,
     vector::Vec3,
     world::World,
@@ -63,7 +63,6 @@ impl Camera {
             max_depth,
         }
     }
-
     pub fn render(&self, world: World) -> std::io::Result<()> {
         let file = File::create("out.ppm")?;
         let mut writer = BufWriter::new(file);
@@ -71,36 +70,27 @@ impl Camera {
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height);
         writer.write_all(header.as_bytes()).unwrap();
 
-        let lines: Vec<&[u8]> = (0..self.image_height)
-            .into_par_iter()
-            .map(|j| {
-                // for j in 0..self.image_height {
-                // TODO: this print won't work in parallel
-                print!("\rScanlines remaining: {}", self.image_height - j);
-                stdout().flush().unwrap();
+        for j in 0..self.image_height {
+            print!("\rScanlines remaining: {}", self.image_height - j);
+            stdout().flush().unwrap();
 
-                let out = Vec::new();
-                for i in 0..self.image_width {
+            (0..self.image_width)
+                .into_par_iter()
+                .map(|i| {
                     let mut pixel_color = Color::default();
 
                     for _ in 0..self.samples {
                         let ray = self.get_ray(i, j);
                         pixel_color += ray.color(&world, self.max_depth);
                     }
-                    // TODO: to use par_iter we need to collect the colors
-                    // and then write them at the end outside this closure
+                    get_color(pixel_color, self.samples)
+                })
+                .collect::<Vec<String>>()
+                .into_iter()
+                .for_each(|color| writer.write_all(color.as_bytes()).unwrap());
+        }
 
-                    // write_color(&mut writer, pixel_color, self.samples)
-                    out.push(get_color(pixel_color, self.samples).as_bytes())
-                }
-                out
-            })
-            .collect()
-            .into_iter()
-            .flatten()
-            .collect();
-
-        print!("\rDone.                   \n");
+        println!("\rDone.                     ");
         Ok(())
     }
 

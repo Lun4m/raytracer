@@ -26,11 +26,11 @@ pub fn write_color(writer: &mut BufWriter<File>, color: Color, samples: i32) {
     let g = (intensity.clamp(g) * 255.999) as i32;
     let b = (intensity.clamp(b) * 255.999) as i32;
 
-    let line = format!("{r} {g} {b}\n");
+    let line = format!("{r} {g} {b}");
     writer.write_all(line.as_bytes()).unwrap();
 }
 
-pub fn get_color<'a>(color: Color, samples: i32) -> String {
+pub fn get_color(color: Color, samples: i32) -> String {
     let scale = 1.0 / samples as f64;
     let intensity = Interval::new(0.0, 0.999);
 
