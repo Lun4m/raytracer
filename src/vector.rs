@@ -1,6 +1,7 @@
 use std::ops::{self};
 
-use rand::random;
+use rand::{random, thread_rng, Rng};
+use rand_distr::StandardNormal;
 
 fn random_in_interval(min: f64, max: f64) -> f64 {
     min + (max - min) * random::<f64>()
@@ -17,52 +18,70 @@ const EPS: f64 = 1e-8;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Vec3 { x, y, z }
-    }
-
-    pub fn len_squared(self) -> f64 {
-        self.x * self.x + self.y * self.y + self.z * self.z
-    }
-
-    pub fn len(self) -> f64 {
-        self.len_squared().sqrt()
+        Self { x, y, z }
     }
 
     pub fn random() -> Self {
-        Vec3::new(random(), random(), random())
+        Self::new(random(), random(), random())
     }
 
     pub fn random_min_max(min: f64, max: f64) -> Self {
-        Vec3::new(
+        Self::new(
             random_in_interval(min, max),
             random_in_interval(min, max),
             random_in_interval(min, max),
         )
     }
 
+    pub fn random_normal() -> Self {
+        Self::new(
+            thread_rng().sample(StandardNormal),
+            thread_rng().sample(StandardNormal),
+            thread_rng().sample(StandardNormal),
+        )
+    }
+
+    // TODO: this rejection method is so slow!
     pub fn random_in_unit_sphere() -> Self {
         loop {
-            let v = Vec3::random_min_max(-1.0, 1.0);
+            // Sample in unit cube
+            let v = Self::random_min_max(-1.0, 1.0);
+            // Reject if outside unit sphere
             if v.len_squared() < 1.0 {
                 return v;
             }
         }
     }
 
+    pub fn random_unit_vector_on_sphere() -> Self {
+        unit_vector(Self::random_in_unit_sphere())
+    }
+
+    // This one is 20% faster for me compared to the rejection method
     pub fn random_unit_vector() -> Self {
-        unit_vector(Vec3::random_in_unit_sphere())
+        let u = random::<f64>();
+        u.cbrt() * unit_vector(Self::random_normal())
     }
 
-    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
-        let on_unit_sphere = Vec3::random_unit_vector();
-        if dot(&on_unit_sphere, normal) > 0.0 {
-            on_unit_sphere
-        } else {
-            -on_unit_sphere
-        }
+    pub fn random_unit_vector_cube() -> Self {
+        unit_vector(Self::random_min_max(-1.0, 1.0))
     }
 
-    pub fn near_zero(self) -> bool {
+    pub fn random_on_hemisphere(normal: &Vec3) -> Self {
+        let on_unit_sphere = Self::random_unit_vector();
+        let sign = dot(&on_unit_sphere, normal).signum();
+        sign * on_unit_sphere
+    }
+
+    pub fn len_squared(&self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn len(&self) -> f64 {
+        self.len_squared().sqrt()
+    }
+
+    pub fn near_zero(&self) -> bool {
         (self.x.abs() < EPS) && (self.x.abs() < EPS) && (self.x.abs() < EPS)
     }
 }
