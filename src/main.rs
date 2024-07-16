@@ -28,9 +28,8 @@ fn main() {
     let center = Material::Lambertian {
         albedo: Color::new(0.1, 0.2, 0.5),
     };
-    let left = Material::Metal {
-        albedo: Color::new(0.8, 0.8, 0.8),
-        fuzz: 0.3,
+    let left = Material::Dielectric {
+        refraction_index: 1.5,
     };
     let right = Material::Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
@@ -44,6 +43,6 @@ fn main() {
     world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right));
 
     if let Err(e) = camera.render(world) {
-        eprintln!("Render failed with error: {e}")
+        eprintln!("Failed while rendering with error: {e}")
     }
 }

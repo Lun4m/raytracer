@@ -73,6 +73,10 @@ impl Vec3 {
         sign * on_unit_sphere
     }
 
+    // pub fn normalize(&mut self) {
+    //     *self / self.len();
+    // }
+
     pub fn len_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -86,11 +90,20 @@ impl Vec3 {
     }
 }
 
+// TODO: use macro to register these traits
 impl ops::Neg for Vec3 {
     type Output = Vec3;
 
     fn neg(self) -> Self::Output {
         Self::new(-self.x, -self.y, -self.z)
+    }
+}
+
+impl<'a> ops::Neg for &'a Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        Vec3::new(-self.x, -self.y, -self.z)
     }
 }
 
@@ -102,7 +115,39 @@ impl ops::Add<Vec3> for Vec3 {
     }
 }
 
+impl<'a> ops::Add<&'a Vec3> for &'a Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: &'a Vec3) -> Self::Output {
+        Vec3::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl<'a> ops::Add<&'a Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: &'a Vec3) -> Self::Output {
+        Vec3::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl<'a> ops::Add<Vec3> for &'a Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        rhs + self
+    }
+}
+
 impl ops::Add<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Vec3::new(self.x + rhs, self.y + rhs, self.z + rhs)
+    }
+}
+
+impl<'a> ops::Add<f64> for &'a Vec3 {
     type Output = Vec3;
 
     fn add(self, rhs: f64) -> Self::Output {
@@ -118,7 +163,7 @@ impl ops::Add<Vec3> for f64 {
     }
 }
 
-impl ops::Sub for Vec3 {
+impl ops::Sub<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -127,6 +172,14 @@ impl ops::Sub for Vec3 {
 }
 
 impl ops::Mul<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Vec3::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
+}
+
+impl<'a> ops::Mul<f64> for &'a Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: f64) -> Self::Output {
@@ -143,7 +196,7 @@ impl ops::Mul<i32> for Vec3 {
     }
 }
 
-impl ops::Mul for Vec3 {
+impl ops::Mul<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -159,6 +212,14 @@ impl ops::Mul<Vec3> for f64 {
     }
 }
 
+impl<'a> ops::Mul<&'a Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: &'a Vec3) -> Self::Output {
+        rhs * self
+    }
+}
+
 impl ops::Mul<Vec3> for i32 {
     type Output = Vec3;
 
@@ -167,7 +228,7 @@ impl ops::Mul<Vec3> for i32 {
     }
 }
 
-impl ops::Div for Vec3 {
+impl ops::Div<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -200,7 +261,7 @@ impl ops::AddAssign<f64> for Vec3 {
     }
 }
 
-impl ops::AddAssign for Vec3 {
+impl ops::AddAssign<Vec3> for Vec3 {
     fn add_assign(&mut self, rhs: Vec3) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -224,6 +285,16 @@ impl ops::DivAssign<f64> for Vec3 {
     }
 }
 
+impl core::iter::Sum for Vec3 {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        let mut result = Self::default();
+        for item in iter {
+            result += item;
+        }
+        result
+    }
+}
+
 pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
     u.x * v.x + u.y * v.y + u.z * v.z
 }
@@ -242,4 +313,13 @@ pub fn unit_vector(v: Vec3) -> Vec3 {
 
 pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     (*v) - 2.0 * dot(v, n) * (*n)
+}
+
+pub fn refract(v: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = dot(&(-v), n).min(1.0);
+    let r_out_perp = etai_over_etat * (v + cos_theta * n);
+    let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
+
+    // TODO: worth implementing ops_*_mut() methods?
+    r_out_perp + r_out_parallel
 }

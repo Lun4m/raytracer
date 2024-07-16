@@ -63,6 +63,7 @@ impl Camera {
             max_depth,
         }
     }
+
     pub fn render(&self, world: World) -> std::io::Result<()> {
         let file = File::create("out.ppm")?;
         let mut writer = BufWriter::new(file);
@@ -77,12 +78,11 @@ impl Camera {
             (0..self.image_width)
                 .into_par_iter()
                 .map(|i| {
-                    let mut pixel_color = Color::default();
+                    let pixel_color = (0..self.samples)
+                        // .into_par_iter()
+                        .map(|_| self.get_ray(i, j).color(&world, self.max_depth))
+                        .sum();
 
-                    for _ in 0..self.samples {
-                        let ray = self.get_ray(i, j);
-                        pixel_color += ray.color(&world, self.max_depth);
-                    }
                     get_color(pixel_color, self.samples)
                 })
                 .collect::<Vec<String>>()

@@ -2,25 +2,27 @@ use crate::{
     color::Color,
     hittables::HitRecord,
     ray::Ray,
-    vector::{dot, reflect, unit_vector, Vec3},
+    vector::{dot, reflect, refract, unit_vector, Vec3},
 };
 
 #[derive(Clone)]
 pub enum Material {
+    Vacuum,
     Lambertian { albedo: Color },
     Metal { albedo: Color, fuzz: f64 },
-    Empty,
+    Dielectric { refraction_index: f64 },
 }
 
 impl Default for Material {
     fn default() -> Self {
-        Self::Empty
+        Self::Vacuum
     }
 }
 
 impl Material {
     pub fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
         match self {
+            Material::Vacuum => unreachable!(),
             Material::Lambertian { albedo } => {
                 let scatter_direction = record.normal + Vec3::random_unit_vector();
 
@@ -42,7 +44,21 @@ impl Material {
                 }
                 None
             }
-            Material::Empty => unreachable!(),
+            Material::Dielectric {
+                mut refraction_index,
+            } => {
+                let attenuation = Color::full();
+                if record.front_face {
+                    refraction_index = 1.0 / refraction_index
+                }
+                let refracted = refract(
+                    &unit_vector(ray.direction),
+                    &record.normal,
+                    refraction_index,
+                );
+
+                Some((Ray::new(record.point, refracted), attenuation))
+            }
         }
     }
 }
