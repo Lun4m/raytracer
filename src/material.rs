@@ -45,19 +45,15 @@ impl Material {
                 None
             }
             Material::Dielectric {
-                mut refraction_index,
+                refraction_index: eta,
             } => {
-                let attenuation = Color::full();
-                if record.front_face {
-                    refraction_index = 1.0 / refraction_index
-                }
-                let refracted = refract(
-                    &unit_vector(ray.direction),
-                    &record.normal,
-                    refraction_index,
-                );
+                let eta_ratio = if record.front_face { 1.0 / eta } else { *eta };
 
-                Some((Ray::new(record.point, refracted), attenuation))
+                let unit_direction = unit_vector(ray.direction);
+                let out_direction = refract(&unit_direction, &record.normal, eta_ratio);
+
+                let attenuation = Color::full();
+                Some((Ray::new(record.point, out_direction), attenuation))
             }
         }
     }

@@ -17,7 +17,7 @@ use world::World;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1200;
+    let image_width = 800;
     let samples = 50;
     let max_depth = 10;
     let camera = Camera::new(aspect_ratio, image_width, samples, max_depth);
@@ -29,7 +29,8 @@ fn main() {
         albedo: Color::new(0.1, 0.2, 0.5),
     };
     let left = Material::Dielectric {
-        refraction_index: 1.5,
+        // air / water => bubble sphere
+        refraction_index: 1.0 / 1.333,
     };
     let right = Material::Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
