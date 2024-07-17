@@ -310,24 +310,3 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.len()
 }
-
-pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-    (*v) - 2.0 * dot(v, n) * (*n)
-}
-
-pub fn refract(v: &Vec3, n: &Vec3, eta_ratio: f64) -> Vec3 {
-    let cos_theta = (-dot(v, n)).min(1.0);
-    let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
-
-    // If the ray cannot be refracted it is reflected (total internal reflection)
-    // Should only happen for materials that have eta < eta of the external medium
-    if sin_theta * eta_ratio > 1.0 {
-        return reflect(v, n);
-    }
-
-    let r_out_perp = eta_ratio * (v + cos_theta * n);
-    let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
-
-    // TODO: worth implementing ops_*_mut() methods?
-    r_out_perp + r_out_parallel
-}

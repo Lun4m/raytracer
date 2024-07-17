@@ -1,8 +1,10 @@
+use rand::random;
+
 use crate::{
     color::Color,
     hittables::HitRecord,
     ray::Ray,
-    vector::{dot, reflect, refract, unit_vector, Vec3},
+    vector::{dot, unit_vector, Vec3},
 };
 
 #[derive(Clone)]
@@ -57,4 +59,36 @@ impl Material {
             }
         }
     }
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    (*v) - 2.0 * dot(v, n) * (*n)
+}
+
+pub fn reflectance(cos: f64, eta_ratio: f64) -> f64 {
+    // Schlink's approximation
+    let r = (1.0 - eta_ratio) / (1.0 + eta_ratio);
+    let rsqrd = r * r;
+
+    rsqrd + (1.0 - rsqrd) * (1.0 - cos).powi(5)
+}
+
+pub fn refract(v: &Vec3, n: &Vec3, eta_ratio: f64) -> Vec3 {
+    let cos_theta = (-dot(v, n)).min(1.0);
+    let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+
+    // If the ray cannot be refracted it is reflected (total internal reflection)
+    // Should only happen for materials that have eta < eta of the external medium
+    let cannot_refract = sin_theta * eta_ratio > 1.0;
+    // Takes care of materials that respond differtly with the angle
+    let will_reflect = reflectance(cos_theta, eta_ratio) > random();
+    if cannot_refract || will_reflect {
+        return reflect(v, n);
+    }
+
+    let r_out_perp = eta_ratio * (v + cos_theta * n);
+    let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
+
+    // TODO: worth implementing ops_*_mut() methods?
+    r_out_perp + r_out_parallel
 }

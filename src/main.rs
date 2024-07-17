@@ -30,7 +30,9 @@ fn main() {
     };
     let left = Material::Dielectric {
         // air / water => bubble sphere
-        refraction_index: 1.0 / 1.333,
+        // refraction_index: 1.0 / 1.333,
+        // glass
+        refraction_index: 1.5,
     };
     let right = Material::Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
