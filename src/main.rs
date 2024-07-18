@@ -8,7 +8,7 @@ mod sphere;
 mod vector;
 mod world;
 
-use camera::Camera;
+use camera::{Camera, CameraConfig};
 use color::Color;
 use material::Material;
 use sphere::Sphere;
@@ -16,31 +16,18 @@ use vector::Vec3;
 use world::World;
 
 fn main() {
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 800;
-    let samples = 50;
-    let max_depth = 10;
-    let vfov = 20.0;
-
-    let look_from = Vec3::new(-2.0, 2.0, 1.0);
-    let look_at = Vec3::new(0.0, 0.0, -1.0);
-    let up_direction = Vec3::new(0.0, 1.0, 0.0);
-
-    let defocus_angle = 10.0;
-    let focus_dist = 3.4;
-
-    let camera = Camera::new(
-        aspect_ratio,
-        image_width,
-        samples,
-        max_depth,
-        vfov,
-        look_from,
-        look_at,
-        up_direction,
-        defocus_angle,
-        focus_dist,
-    );
+    let camera = Camera::new(CameraConfig {
+        aspect_ratio: 16.0 / 9.0,
+        image_width: 800,
+        samples: 50,
+        max_depth: 10,
+        vfov: 20.0,
+        look_from: Vec3::new(-2.0, 2.0, 1.0),
+        look_at: Vec3::new(0.0, 0.0, -1.0),
+        up_direction: Vec3::new(0.0, 1.0, 0.0),
+        defocus_angle: 10.0,
+        focus_dist: 3.4,
+    });
 
     let ground = Material::Lambertian {
         albedo: Color::new(0.8, 0.8, 0.0),
@@ -59,7 +46,7 @@ fn main() {
 
     let world = World::from(vec![
         Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, ground),
-        Sphere::new(Vec3::new(0.0, 0.0, -1.2), 0.5, center),
+        Sphere::new(Vec3::new(0.0, 0.0, -2.0), 0.5, center),
         Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, left),
         Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right),
     ]);
