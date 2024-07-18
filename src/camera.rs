@@ -100,7 +100,7 @@ impl Camera {
         let ray_direction = pixel_center + self.pixel_sample_square();
 
         // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
-        Ray::new(self.center, ray_direction)
+        Ray::new(self.center, ray_direction - self.center)
     }
 
     fn pixel_sample_square(&self) -> Vec3 {
