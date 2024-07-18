@@ -1,11 +1,11 @@
 use crate::{hittables::HitRecord, interval::Interval, ray::Ray, sphere::Sphere};
 
 pub struct World {
-    objects: Vec<Sphere>,
+    pub objects: Vec<Sphere>,
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn _new() -> Self {
         World {
             objects: Vec::new(),
         }
@@ -15,28 +15,31 @@ impl World {
         Self { objects }
     }
 
-    pub fn add(&mut self, obj: Sphere) {
+    pub fn _add(&mut self, obj: Sphere) {
         self.objects.push(obj);
     }
 
-    // TODO: refactor this function, it's a bit messy with the default HitRecord
-    pub fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool {
+    // TODO: feels like this could be implemented better
+    pub fn hit(&self, ray: &Ray, hit_range: Interval) -> Option<HitRecord> {
+        let closest_so_far = hit_range.max;
         let mut hit_anything = false;
-        let mut closest_so_far = ray_hit.max;
-        let mut temp_record = HitRecord::default();
+        let mut record = HitRecord::default();
 
         for obj in &self.objects {
-            if obj.hit(
-                ray,
-                Interval::new(ray_hit.min, closest_so_far),
-                &mut temp_record,
-            ) {
+            if let Some((closest_so_far, normal, mat)) =
+                obj.hit(ray, Interval::new(hit_range.min, closest_so_far))
+            {
                 hit_anything = true;
-                closest_so_far = temp_record.t;
-                record.update(&temp_record);
+                record.point = ray.at(closest_so_far);
+                record.set_face_normal(ray, normal);
+                record.material = mat;
             }
         }
 
-        hit_anything
+        if !hit_anything {
+            return None;
+        }
+
+        Some(record)
     }
 }

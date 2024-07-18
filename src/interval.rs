@@ -10,14 +10,14 @@ impl Interval {
         Interval { min, max }
     }
 
-    pub fn empty() -> Self {
+    pub fn _empty() -> Self {
         Interval {
             min: INFINITY,
             max: -INFINITY,
         }
     }
 
-    pub fn universe() -> Self {
+    pub fn _universe() -> Self {
         Interval {
             min: -INFINITY,
             max: INFINITY,
@@ -31,7 +31,7 @@ impl Interval {
         }
     }
 
-    pub fn negative() -> Self {
+    pub fn _negative() -> Self {
         Interval {
             min: -INFINITY,
             max: 0.0,
@@ -39,7 +39,7 @@ impl Interval {
     }
 
     // TODO: check that these methods are correct
-    pub fn contains(&self, x: f64) -> bool {
+    pub fn _contains(&self, x: f64) -> bool {
         self.min <= x && self.max >= x
     }
 

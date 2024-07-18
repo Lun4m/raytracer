@@ -1,5 +1,4 @@
 use crate::{
-    hittables::HitRecord,
     interval::Interval,
     material::Material,
     ray::Ray,
@@ -21,7 +20,7 @@ impl Sphere {
         }
     }
 
-    pub fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool {
+    pub fn hit(&self, ray: &Ray, hit_range: Interval) -> Option<(f64, Vec3, Material)> {
         let oc = &self.center - &ray.origin;
         let a = ray.direction.len_squared();
         let half_b = dot(&oc, &ray.direction);
@@ -29,25 +28,22 @@ impl Sphere {
         let discriminant = half_b * half_b - a * c;
 
         if discriminant < 0.0 {
-            return false;
+            return None;
         }
 
         let dsqrt = discriminant.sqrt();
         let mut root = (half_b - dsqrt) / a;
-        if !ray_hit.surrounds(root) {
+
+        // TODO: do this outside?
+        // Exclude objects that are outside the interval
+        if !hit_range.surrounds(root) {
             root = (half_b + dsqrt) / a;
-            if !ray_hit.surrounds(root) {
-                return false;
+            if !hit_range.surrounds(root) {
+                return None;
             }
         }
 
-        record.t = root;
-        record.point = ray.at(record.t);
-        record.material = self.material.clone();
-
-        let outward_normal = (&record.point - &self.center) / self.radius;
-        record.set_face_normal(ray, outward_normal);
-
-        true
+        let outward_normal = (&ray.at(root) - &self.center) / self.radius;
+        Some((root, outward_normal, self.material.clone()))
     }
 }

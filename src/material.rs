@@ -60,7 +60,7 @@ impl Material {
                 let unit_direction = unit_vector(&ray.direction);
                 let out_direction = refract(&unit_direction, &record.normal, eta_ratio);
 
-                let attenuation = Color::full();
+                let attenuation = Color::white();
                 Some((Ray::new(record.point.clone(), out_direction), attenuation))
             }
         }

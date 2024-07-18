@@ -4,12 +4,13 @@ use crate::{
     vector::{dot, Vec3},
 };
 
+/// Struct that keeps track of the hit point, the normal vector at point,
+/// the material of the hit object
 #[derive(Default)]
 pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
     pub material: Material,
-    pub t: f64,
     pub front_face: bool,
 }
 
@@ -26,11 +27,7 @@ impl HitRecord {
         };
     }
 
-    pub fn update(&mut self, other: &HitRecord) {
-        self.point = other.point.clone();
-        self.normal = other.normal.clone();
-        self.t = other.t;
-        self.material = other.material.clone();
-        self.front_face = other.front_face;
-    }
+    // pub fn update(&mut self, r: &Ray, outward_normal: Vec3, distance: f64, material: Material) {
+    //     self.material = material
+    // }
 }

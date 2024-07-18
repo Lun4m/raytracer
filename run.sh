@@ -1,1 +1,1 @@
-cargo run && open out.ppm
+cargo run --release && open out.ppm

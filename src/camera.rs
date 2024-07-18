@@ -7,7 +7,8 @@ use rand::random;
 use rayon::prelude::*;
 
 use crate::{
-    color::get_color,
+    color::{color_to_string, Color},
+    interval::Interval,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
     world::World,
@@ -72,7 +73,6 @@ impl Camera {
         let center = config.look_from;
 
         // viewport dimensions
-        // let focal_len = (look_from - look_at).len();
         let theta = config.vfov.to_radians();
         let h = (0.5 * theta).tan();
         let viewport_height = 2.0 * h * config.focus_dist;
@@ -133,10 +133,10 @@ impl Camera {
                 .map(|i| {
                     let pixel_color = (0..self.samples)
                         // .into_par_iter()
-                        .map(|_| self.get_ray(i, j).color(&world, self.max_depth))
+                        .map(|_| get_color(self.get_ray(i, j), &world, self.max_depth))
                         .sum();
 
-                    get_color(pixel_color, self.samples)
+                    color_to_string(pixel_color, self.samples)
                 })
                 .collect::<Vec<String>>()
                 .into_iter()
@@ -155,7 +155,6 @@ impl Camera {
         let ray_target = pixel_center + self.pixel_sample_square();
         let ray_direction = ray_target - ray_origin.clone();
 
-        // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
         Ray::new(ray_origin, ray_direction)
     }
 
@@ -179,4 +178,26 @@ impl Default for Camera {
     fn default() -> Self {
         Self::new(CameraConfig::default())
     }
+}
+
+// TODO: get rid of recursion?
+pub fn get_color(ray: Ray, world: &World, depth: i32) -> Color {
+    if depth <= 0 {
+        return Color::default();
+    }
+
+    if let Some(hit) = world.hit(&ray, Interval::positive()) {
+        return match hit.material.scatter(&ray, &hit) {
+            Some((ray_scattered, attenuation)) => {
+                attenuation * get_color(ray_scattered, world, depth - 1)
+            }
+            None => Color::default(),
+        };
+    }
+
+    // Sky box
+    let unit_direction = unit_vector(&ray.direction);
+    // LERP transformation
+    let percent = 0.5 * (unit_direction.y + 1.0);
+    (1.0 - percent) * Color::white() + percent * Color::new(0.5, 0.7, 1.0)
 }

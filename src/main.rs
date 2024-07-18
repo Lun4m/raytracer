@@ -25,7 +25,7 @@ fn main() {
         look_from: Vec3::new(-2.0, 2.0, 1.0),
         look_at: Vec3::new(0.0, 0.0, -1.0),
         up_direction: Vec3::new(0.0, 1.0, 0.0),
-        defocus_angle: 10.0,
+        defocus_angle: 0.0,
         focus_dist: 3.4,
     });
 
