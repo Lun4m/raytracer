@@ -20,11 +20,14 @@ fn main() {
     let image_width = 800;
     let samples = 50;
     let max_depth = 10;
-    let vfov = 90.0;
+    let vfov = 20.0;
 
     let look_from = Vec3::new(-2.0, 2.0, 1.0);
     let look_at = Vec3::new(0.0, 0.0, -1.0);
     let up_direction = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle = 10.0;
+    let focus_dist = 3.4;
 
     let camera = Camera::new(
         aspect_ratio,
@@ -35,6 +38,8 @@ fn main() {
         look_from,
         look_at,
         up_direction,
+        defocus_angle,
+        focus_dist,
     );
 
     let ground = Material::Lambertian {

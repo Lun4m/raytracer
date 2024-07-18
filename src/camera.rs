@@ -36,6 +36,10 @@ pub struct Camera {
     // up_direction: Vec3,
     // Camera frame basis vectors
     // basis: [Vec4; 3],
+    //
+    defocus_angle: f64,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
@@ -48,16 +52,18 @@ impl Camera {
         look_from: Vec3,
         look_at: Vec3,
         up_direction: Vec3,
+        defocus_angle: f64,
+        focus_dist: f64,
     ) -> Self {
         // image setup
         let image_height = (image_width as f64 / aspect_ratio) as i32;
         let center = look_from;
 
         // viewport dimensions
-        let focal_len = (look_from - look_at).len();
+        // let focal_len = (look_from - look_at).len();
         let theta = vfov.to_radians();
         let h = (0.5 * theta).tan();
-        let viewport_height = 2.0 * h * focal_len;
+        let viewport_height = 2.0 * h * focus_dist;
         let viewport_width = viewport_height * aspect_ratio;
 
         // Calculate camera frame basis vectors
@@ -75,8 +81,13 @@ impl Camera {
         let pixel_delta_v = viewport_v / image_height;
 
         // Calculate location of upper left pixel
-        let viewport_upperleft = center - (focal_len * w) - 0.5 * (viewport_u + viewport_v);
+        let viewport_upperleft = center - (focus_dist * w) - 0.5 * (viewport_u + viewport_v);
         let pixel_00 = viewport_upperleft + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        // Calculate defocus disk
+        let defocus_radius = focus_dist * (0.5 * defocus_angle).to_radians().tan();
+        let defocus_disk_u = defocus_radius * u;
+        let defocus_disk_v = defocus_radius * v;
 
         Camera {
             aspect_ratio,
@@ -88,6 +99,9 @@ impl Camera {
             pixel_delta_v,
             samples,
             max_depth,
+            defocus_disk_u,
+            defocus_disk_v,
+            defocus_angle,
         }
     }
 
@@ -123,11 +137,22 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {
+        let ray_origin = self.center + self.defocus_disk_sample();
+
         let pixel_center = self.pixel_00 + (i * self.pixel_delta_u) + (j * self.pixel_delta_v);
-        let ray_direction = pixel_center + self.pixel_sample_square();
+        let ray_target = pixel_center + self.pixel_sample_square();
 
         // TODO: is it worth it to pass references here insted of deriving clone on Vec3?
-        Ray::new(self.center, ray_direction - self.center)
+        Ray::new(ray_origin, ray_target - ray_origin)
+    }
+
+    fn defocus_disk_sample(&self) -> Vec3 {
+        if self.defocus_angle <= 0.0 {
+            return Vec3::default();
+        }
+
+        let vec = Vec3::random_in_unit_disk();
+        (vec.x * self.defocus_disk_u) + (vec.y * self.defocus_disk_v)
     }
 
     fn pixel_sample_square(&self) -> Vec3 {

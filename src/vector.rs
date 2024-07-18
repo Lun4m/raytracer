@@ -42,34 +42,46 @@ impl Vec3 {
         )
     }
 
+    pub fn random_normal_xy() -> Self {
+        Self::new(
+            thread_rng().sample(StandardNormal),
+            thread_rng().sample(StandardNormal),
+            0.0,
+        )
+    }
+
+    // uniformely sample a point in a unit sphere
     // TODO: this rejection method is so slow!
-    pub fn random_in_unit_sphere() -> Self {
-        loop {
-            // Sample in unit cube
-            let v = Self::random_min_max(-1.0, 1.0);
-            // Reject if outside unit sphere
-            if v.len_squared() < 1.0 {
-                return v;
-            }
-        }
-    }
+    // pub fn random_in_unit_sphere() -> Self {
+    //     loop {
+    //         // Sample in unit cube
+    //         let v = Self::random_min_max(-1.0, 1.0);
+    //         // Reject if outside unit sphere
+    //         if v.len_squared() < 1.0 {
+    //             return unit_vector(v);
+    //         }
+    //     }
+    // }
 
-    pub fn random_unit_vector_on_sphere() -> Self {
-        unit_vector(Self::random_in_unit_sphere())
-    }
-
+    // uniformely sample a point in a unit sphere
     // This one is 20% faster for me compared to the rejection method
-    pub fn random_unit_vector() -> Self {
+    pub fn random_in_unit_sphere() -> Self {
         let u = random::<f64>();
         u.cbrt() * unit_vector(Self::random_normal())
     }
 
-    pub fn random_unit_vector_cube() -> Self {
+    // uniformely sample a point in a unit circle on the xy plane
+    pub fn random_in_unit_disk() -> Vec3 {
+        let u = random::<f64>();
+        u.sqrt() * unit_vector(Self::random_normal_xy())
+    }
+
+    pub fn random_in_unit_cube() -> Self {
         unit_vector(Self::random_min_max(-1.0, 1.0))
     }
 
     pub fn random_on_hemisphere(normal: &Vec3) -> Self {
-        let on_unit_sphere = Self::random_unit_vector();
+        let on_unit_sphere = Self::random_in_unit_sphere();
         let sign = dot(&on_unit_sphere, normal).signum();
         sign * on_unit_sphere
     }

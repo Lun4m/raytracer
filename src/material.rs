@@ -26,7 +26,7 @@ impl Material {
         match self {
             Material::Vacuum => unreachable!(),
             Material::Lambertian { albedo } => {
-                let scatter_direction = record.normal + Vec3::random_unit_vector();
+                let scatter_direction = record.normal + Vec3::random_in_unit_sphere();
 
                 if scatter_direction.near_zero() {
                     return Some((Ray::new(record.point, record.normal), *albedo));
@@ -36,10 +36,12 @@ impl Material {
             }
             Material::Metal { albedo, fuzz } => {
                 let reflected = unit_vector(reflect(&ray.direction, &record.normal))
-                    + *fuzz * Vec3::random_unit_vector();
+                    + *fuzz * Vec3::random_in_unit_sphere();
 
-                let scattered =
-                    Ray::new(record.point, reflected + *fuzz * Vec3::random_unit_vector());
+                let scattered = Ray::new(
+                    record.point,
+                    reflected + *fuzz * Vec3::random_in_unit_sphere(),
+                );
 
                 if dot(&scattered.direction, &record.normal) > 0.0 {
                     return Some((scattered, *albedo));
