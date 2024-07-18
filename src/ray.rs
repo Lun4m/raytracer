@@ -17,7 +17,7 @@ impl Ray {
         Ray { origin, direction }
     }
     pub fn at(&self, t: f64) -> Vec3 {
-        self.origin + t * self.direction
+        &self.origin + t * &self.direction
     }
 
     // TODO: refactor this function, it's a bit messy with the default HitRecord
@@ -37,7 +37,7 @@ impl Ray {
             }
         }
 
-        let unit_direction = unit_vector(self.direction);
+        let unit_direction = unit_vector(&self.direction);
         // LERP transformation
         let percent = 0.5 * (unit_direction.y + 1.0);
         (1.0 - percent) * Color::full() + percent * Color::new(0.5, 0.7, 1.0)

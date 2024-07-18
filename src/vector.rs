@@ -8,7 +8,7 @@ fn random_in_interval(min: f64, max: f64) -> f64 {
 }
 
 // TODO: should not derive Copy here lol
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -67,17 +67,17 @@ impl Vec3 {
     // This one is 20% faster for me compared to the rejection method
     pub fn random_in_unit_sphere() -> Self {
         let u = random::<f64>();
-        u.cbrt() * unit_vector(Self::random_normal())
+        u.cbrt() * unit_vector(&Self::random_normal())
     }
 
     // uniformely sample a point in a unit circle on the xy plane
     pub fn random_in_unit_disk() -> Vec3 {
         let u = random::<f64>();
-        u.sqrt() * unit_vector(Self::random_normal_xy())
+        u.sqrt() * unit_vector(&Self::random_normal_xy())
     }
 
     pub fn random_in_unit_cube() -> Self {
-        unit_vector(Self::random_min_max(-1.0, 1.0))
+        unit_vector(&Self::random_min_max(-1.0, 1.0))
     }
 
     pub fn random_on_hemisphere(normal: &Vec3) -> Self {
@@ -128,10 +128,10 @@ impl ops::Add<Vec3> for Vec3 {
     }
 }
 
-impl<'a> ops::Add<&'a Vec3> for &'a Vec3 {
+impl ops::Add<&Vec3> for &Vec3 {
     type Output = Vec3;
 
-    fn add(self, rhs: &'a Vec3) -> Self::Output {
+    fn add(self, rhs: &Vec3) -> Self::Output {
         Vec3::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
 }
@@ -179,7 +179,23 @@ impl ops::Add<Vec3> for f64 {
 impl ops::Sub<Vec3> for Vec3 {
     type Output = Vec3;
 
-    fn sub(self, rhs: Self) -> Self::Output {
+    fn sub(self, rhs: Vec3) -> Self::Output {
+        Vec3::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+impl ops::Sub<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Vec3) -> Self::Output {
+        Vec3::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+impl ops::Sub<&Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: &Vec3) -> Self::Output {
         Vec3::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
@@ -196,6 +212,15 @@ impl<'a> ops::Mul<f64> for &'a Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: f64) -> Self::Output {
+        Vec3::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
+}
+
+impl ops::Mul<i32> for &Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        let rhs = rhs as f64;
         Vec3::new(self.x * rhs, self.y * rhs, self.z * rhs)
     }
 }
@@ -241,6 +266,14 @@ impl ops::Mul<Vec3> for i32 {
     }
 }
 
+impl ops::Mul<&Vec3> for i32 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: &Vec3) -> Self::Output {
+        rhs * self as f64
+    }
+}
+
 impl ops::Div<Vec3> for Vec3 {
     type Output = Vec3;
 
@@ -266,6 +299,15 @@ impl ops::Div<f64> for &Vec3 {
 }
 
 impl ops::Div<i32> for Vec3 {
+    type Output = Vec3;
+
+    fn div(self, rhs: i32) -> Self::Output {
+        let rhs = rhs as f64;
+        Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs)
+    }
+}
+
+impl ops::Div<i32> for &Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: i32) -> Self::Output {
@@ -328,6 +370,6 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     )
 }
 
-pub fn unit_vector(v: Vec3) -> Vec3 {
+pub fn unit_vector(v: &Vec3) -> Vec3 {
     v / v.len()
 }

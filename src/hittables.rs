@@ -27,8 +27,8 @@ impl HitRecord {
     }
 
     pub fn update(&mut self, other: &HitRecord) {
-        self.point = other.point;
-        self.normal = other.normal;
+        self.point = other.point.clone();
+        self.normal = other.normal.clone();
         self.t = other.t;
         self.material = other.material.clone();
         self.front_face = other.front_face;

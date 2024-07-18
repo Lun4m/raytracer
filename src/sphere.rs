@@ -22,7 +22,7 @@ impl Sphere {
     }
 
     pub fn hit(&self, ray: &Ray, ray_hit: Interval, record: &mut HitRecord) -> bool {
-        let oc = self.center - ray.origin;
+        let oc = &self.center - &ray.origin;
         let a = ray.direction.len_squared();
         let half_b = dot(&oc, &ray.direction);
         let c = oc.len_squared() - self.radius * self.radius;
@@ -45,7 +45,7 @@ impl Sphere {
         record.point = ray.at(record.t);
         record.material = self.material.clone();
 
-        let outward_normal = (record.point - self.center) / self.radius;
+        let outward_normal = (&record.point - &self.center) / self.radius;
         record.set_face_normal(ray, outward_normal);
 
         true

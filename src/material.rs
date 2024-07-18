@@ -26,25 +26,29 @@ impl Material {
         match self {
             Material::Vacuum => unreachable!(),
             Material::Lambertian { albedo } => {
-                let scatter_direction = record.normal + Vec3::random_in_unit_sphere();
+                let scatter_direction = &record.normal + Vec3::random_in_unit_sphere();
 
                 if scatter_direction.near_zero() {
-                    return Some((Ray::new(record.point, record.normal), *albedo));
+                    return Some((
+                        Ray::new(record.point.clone(), record.normal.clone()),
+                        albedo.clone(),
+                    ));
                 }
 
-                Some((Ray::new(record.point, scatter_direction), *albedo))
+                Some((
+                    Ray::new(record.point.clone(), scatter_direction),
+                    albedo.clone(),
+                ))
             }
             Material::Metal { albedo, fuzz } => {
-                let reflected = unit_vector(reflect(&ray.direction, &record.normal))
+                let reflected = unit_vector(&reflect(&ray.direction, &record.normal))
                     + *fuzz * Vec3::random_in_unit_sphere();
 
-                let scattered = Ray::new(
-                    record.point,
-                    reflected + *fuzz * Vec3::random_in_unit_sphere(),
-                );
+                let ray_direction = reflected + *fuzz * Vec3::random_in_unit_sphere();
+                let scattered = Ray::new(record.point.clone(), ray_direction);
 
                 if dot(&scattered.direction, &record.normal) > 0.0 {
-                    return Some((scattered, *albedo));
+                    return Some((scattered, albedo.clone()));
                 }
                 None
             }
@@ -53,18 +57,18 @@ impl Material {
             } => {
                 let eta_ratio = if record.front_face { 1.0 / eta } else { *eta };
 
-                let unit_direction = unit_vector(ray.direction);
+                let unit_direction = unit_vector(&ray.direction);
                 let out_direction = refract(&unit_direction, &record.normal, eta_ratio);
 
                 let attenuation = Color::full();
-                Some((Ray::new(record.point, out_direction), attenuation))
+                Some((Ray::new(record.point.clone(), out_direction), attenuation))
             }
         }
     }
 }
 
 pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-    (*v) - 2.0 * dot(v, n) * (*n)
+    v - 2.0 * dot(v, n) * n
 }
 
 pub fn reflectance(cos: f64, eta_ratio: f64) -> f64 {
