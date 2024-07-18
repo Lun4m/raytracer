@@ -11,6 +11,10 @@ impl World {
         }
     }
 
+    pub fn from(objects: Vec<Sphere>) -> Self {
+        Self { objects }
+    }
+
     pub fn add(&mut self, obj: Sphere) {
         self.objects.push(obj);
     }

@@ -9,7 +9,7 @@ use rayon::prelude::*;
 use crate::{
     color::{get_color, Color},
     ray::Ray,
-    vector::Vec3,
+    vector::{cross, unit_vector, Vec3},
     world::World,
 };
 
@@ -26,29 +26,56 @@ pub struct Camera {
     samples: i32,
     // Max number of ray bounces
     max_depth: i32,
+    // Vertical viewing angle (field of view)
+    // vfov: f64,
+    // Point the camera is looking from
+    // look_from: Vec3,
+    // Point the camera is looking at
+    // look_at: Vec3,
+    // Camera relative "up" direction
+    // up_direction: Vec3,
+    // Camera frame basis vectors
+    // basis: [Vec4; 3],
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32, samples: i32, max_depth: i32) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: i32,
+        samples: i32,
+        max_depth: i32,
+        vfov: f64,
+        look_from: Vec3,
+        look_at: Vec3,
+        up_direction: Vec3,
+    ) -> Self {
         // image setup
         let image_height = (image_width as f64 / aspect_ratio) as i32;
+        let center = look_from;
 
-        // camera setup
-        let focal_len = 1.0;
-        let viewport_height = 2.0;
+        // viewport dimensions
+        let focal_len = (look_from - look_at).len();
+        let theta = vfov.to_radians();
+        let h = (0.5 * theta).tan();
+        let viewport_height = 2.0 * h * focal_len;
         let viewport_width = viewport_height * aspect_ratio;
-        let center = Vec3::default();
+
+        // Calculate camera frame basis vectors
+        // (u ~= x, v ~= y, w ~= z)
+        let w = unit_vector(look_from - look_at); // opposite to view direction
+        let u = unit_vector(cross(&up_direction, &w));
+        let v = cross(&w, &u);
 
         // vievport vectors
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_u = viewport_width * u; // horizonatal left -> right
+        let viewport_v = -viewport_height * v; // vertical top -> down
 
+        // Calculate horizontal and vertical pixel spacing vectors
         let pixel_delta_u = viewport_u / image_width;
         let pixel_delta_v = viewport_v / image_height;
 
-        let viewport_upperleft =
-            center - Vec3::new(0.0, 0.0, focal_len) - 0.5 * (viewport_u + viewport_v);
-
+        // Calculate location of upper left pixel
+        let viewport_upperleft = center - (focal_len * w) - 0.5 * (viewport_u + viewport_v);
         let pixel_00 = viewport_upperleft + 0.5 * (pixel_delta_u + pixel_delta_v);
 
         Camera {

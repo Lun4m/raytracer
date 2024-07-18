@@ -20,7 +20,22 @@ fn main() {
     let image_width = 800;
     let samples = 50;
     let max_depth = 10;
-    let camera = Camera::new(aspect_ratio, image_width, samples, max_depth);
+    let vfov = 90.0;
+
+    let look_from = Vec3::new(-2.0, 2.0, 1.0);
+    let look_at = Vec3::new(0.0, 0.0, -1.0);
+    let up_direction = Vec3::new(0.0, 1.0, 0.0);
+
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        samples,
+        max_depth,
+        vfov,
+        look_from,
+        look_at,
+        up_direction,
+    );
 
     let ground = Material::Lambertian {
         albedo: Color::new(0.8, 0.8, 0.0),
@@ -29,21 +44,20 @@ fn main() {
         albedo: Color::new(0.1, 0.2, 0.5),
     };
     let left = Material::Dielectric {
-        // air / water => bubble sphere
-        // refraction_index: 1.0 / 1.333,
-        // glass
-        refraction_index: 1.5,
+        // refraction_index: 1.0 / 1.333, // air / water => bubble sphere
+        refraction_index: 1.5, // glass
     };
     let right = Material::Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
-        fuzz: 1.0,
+        fuzz: 0.0,
     };
 
-    let mut world = World::new();
-    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, ground));
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.2), 0.5, center));
-    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, left));
-    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right));
+    let world = World::from(vec![
+        Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, ground),
+        Sphere::new(Vec3::new(0.0, 0.0, -1.2), 0.5, center),
+        Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, left),
+        Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right),
+    ]);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")

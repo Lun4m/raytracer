@@ -7,6 +7,7 @@ fn random_in_interval(min: f64, max: f64) -> f64 {
     min + (max - min) * random::<f64>()
 }
 
+// TODO: should not derive Copy here lol
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
     pub x: f64,
@@ -237,6 +238,14 @@ impl ops::Div<Vec3> for Vec3 {
 }
 
 impl ops::Div<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs)
+    }
+}
+
+impl ops::Div<f64> for &Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: f64) -> Self::Output {
