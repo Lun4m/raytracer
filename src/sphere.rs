@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use crate::{
     interval::Interval,
-    material::Material,
+    material::Hittable,
     ray::Ray,
     vector::{dot, Vec3},
 };
@@ -8,19 +10,27 @@ use crate::{
 pub struct Sphere {
     center: Vec3,
     radius: f64,
-    material: Material,
+    material: Arc<dyn Hittable + Send + Sync>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64, material: Material) -> Sphere {
+    pub fn new(
+        center: Vec3,
+        radius: f64,
+        material: impl Hittable + Send + Sync + 'static,
+    ) -> Sphere {
         Sphere {
             center,
             radius,
-            material,
+            material: Arc::new(material),
         }
     }
 
-    pub fn hit(&self, ray: &Ray, hit_range: Interval) -> Option<(f64, Vec3, Material)> {
+    pub fn hit(
+        &self,
+        ray: &Ray,
+        hit_range: Interval,
+    ) -> Option<(f64, Vec3, Arc<dyn Hittable + Send + Sync>)> {
         let oc = &self.center - &ray.origin;
         let a = ray.direction.len_squared();
         let half_b = dot(&oc, &ray.direction);

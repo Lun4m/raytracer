@@ -7,63 +7,85 @@ use crate::{
     vector::{dot, unit_vector, Vec3},
 };
 
-#[derive(Clone)]
-pub enum Material {
-    Vacuum,
-    Lambertian { albedo: Color },
-    Metal { albedo: Color, fuzz: f64 },
-    Dielectric { refraction_index: f64 },
+pub trait Hittable {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
 }
 
-impl Default for Material {
-    fn default() -> Self {
-        Self::Vacuum
+#[derive(Default)]
+pub struct Lambertian {
+    albedo: Color,
+}
+
+impl Lambertian {
+    pub fn new(albedo: Color) -> Self {
+        Self { albedo }
     }
 }
 
-impl Material {
-    pub fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
-        match self {
-            Material::Vacuum => unreachable!(),
-            Material::Lambertian { albedo } => {
-                let scatter_direction = &record.normal + Vec3::random_in_unit_sphere();
+impl Hittable for Lambertian {
+    fn scatter(&self, _: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
+        let mut scatter_direction = &record.normal + Vec3::random_in_unit_sphere();
 
-                if scatter_direction.near_zero() {
-                    return Some((
-                        Ray::new(record.point.clone(), record.normal.clone()),
-                        albedo.clone(),
-                    ));
-                }
-
-                Some((
-                    Ray::new(record.point.clone(), scatter_direction),
-                    albedo.clone(),
-                ))
-            }
-            Material::Metal { albedo, fuzz } => {
-                let reflected = unit_vector(&reflect(&ray.direction, &record.normal))
-                    + *fuzz * Vec3::random_in_unit_sphere();
-
-                let ray_direction = reflected + *fuzz * Vec3::random_in_unit_sphere();
-                let scattered = Ray::new(record.point.clone(), ray_direction);
-
-                if dot(&scattered.direction, &record.normal) > 0.0 {
-                    return Some((scattered, albedo.clone()));
-                }
-                None
-            }
-            Material::Dielectric {
-                refraction_index: eta,
-            } => {
-                let eta_ratio = if record.front_face { 1.0 / eta } else { *eta };
-
-                let unit_direction = unit_vector(&ray.direction);
-                let out_direction = refract(&unit_direction, &record.normal, eta_ratio);
-
-                let attenuation = Color::white();
-                Some((Ray::new(record.point.clone(), out_direction), attenuation))
-            }
+        if scatter_direction.near_zero() {
+            scatter_direction = record.normal.clone();
         }
+
+        Some((
+            Ray::new(record.point.clone(), scatter_direction),
+            self.albedo.clone(),
+        ))
+    }
+}
+
+pub struct Metal {
+    albedo: Color,
+    fuzz: f64,
+}
+
+impl Metal {
+    pub fn new(albedo: Color, fuzz: f64) -> Self {
+        Self { albedo, fuzz }
+    }
+}
+
+impl Hittable for Metal {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
+        let reflected = unit_vector(&reflect(&ray.direction, &record.normal))
+            + self.fuzz * Vec3::random_in_unit_sphere();
+
+        let ray_direction = reflected + self.fuzz * Vec3::random_in_unit_sphere();
+        let scattered = Ray::new(record.point.clone(), ray_direction);
+
+        if dot(&scattered.direction, &record.normal) > 0.0 {
+            return Some((scattered, self.albedo.clone()));
+        }
+        None
+    }
+}
+
+pub struct Dielectric {
+    eta: f64, // refraction_index
+}
+
+impl Dielectric {
+    pub fn new(eta: f64) -> Self {
+        Self { eta }
+    }
+}
+
+impl Hittable for Dielectric {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
+        let eta_ratio = if record.front_face {
+            1.0 / self.eta
+        } else {
+            self.eta
+        };
+
+        let unit_direction = unit_vector(&ray.direction);
+        let out_direction = refract(&unit_direction, &record.normal, eta_ratio);
+
+        let attenuation = Color::white();
+        Some((Ray::new(record.point.clone(), out_direction), attenuation))
     }
 }
 
