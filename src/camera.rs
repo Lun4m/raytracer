@@ -154,8 +154,9 @@ impl Camera {
         let pixel_center = &self.pixel_00 + (i * &self.pixel_delta_u) + (j * &self.pixel_delta_v);
         let ray_target = pixel_center + self.pixel_sample_square();
         let ray_direction = ray_target - ray_origin.clone();
+        let ray_time = random();
 
-        Ray::new(ray_origin, ray_direction)
+        Ray::new(ray_origin, ray_direction, ray_time)
     }
 
     fn defocus_disk_sample(&self) -> Vec3 {

@@ -3,7 +3,7 @@ use std::ops::{self};
 use rand::{random, thread_rng, Rng};
 use rand_distr::StandardNormal;
 
-fn random_in_interval(min: f64, max: f64) -> f64 {
+pub fn random_in_interval(min: f64, max: f64) -> f64 {
     min + (max - min) * random::<f64>()
 }
 

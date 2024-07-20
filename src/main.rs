@@ -11,46 +11,82 @@ mod world;
 use camera::{Camera, CameraConfig};
 use color::Color;
 use material::{Dielectric, Lambertian, Metal};
+use rand::random;
 use sphere::Sphere;
-use vector::Vec3;
+use vector::{random_in_interval, Vec3};
 use world::World;
 
 fn main() {
+    // image_width, samples, and max_depth are the big performance hitter
     let camera = Camera::new(CameraConfig {
         aspect_ratio: 16.0 / 9.0,
         image_width: 800,
         samples: 50,
         max_depth: 10,
         vfov: 20.0,
-        look_from: Vec3::new(-2.0, 2.0, 4.0),
-        look_at: Vec3::new(0.0, 0.0, -1.0),
+        look_from: Vec3::new(13.0, 2.0, 3.0),
+        look_at: Vec3::new(0.0, 0.0, 0.0),
         up_direction: Vec3::new(0.0, 1.0, 0.0),
-        defocus_angle: 0.0,
-        focus_dist: 3.4,
+        defocus_angle: 0.6,
+        focus_dist: 10.0,
     });
 
-    let ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let left = Dielectric::new(
-        // 1.0 / 1.333, // air / water => bubble sphere
-        1.5, // glass
-    );
-    let right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-    let small_right = Metal::new(Color::new(0.2, 0.9, 0.2), 3.0);
-    let small_left = Metal::new(Color::new(0.2, 0.2, 0.9), 3.0);
-    let small_center = Metal::new(Color::new(0.9, 0.2, 0.2), 3.0);
+    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let mut world = World::from(vec![Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        ground_material,
+    )]);
 
-    let world = World::from(vec![
-        Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, ground),
-        Sphere::new(Vec3::new(0.0, 0.0, -2.0), 0.5, center),
-        Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, left),
-        // TODO: everything goes black if a metal sphere is inside another??
-        Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right),
-        //
-        Sphere::new(Vec3::new(0.3, -0.3, -1.0), 0.2, small_right),
-        Sphere::new(Vec3::new(0.0, -0.4, -0.7), 0.1, small_center),
-        Sphere::new(Vec3::new(-0.3, -0.35, -1.0), 0.15, small_left),
-    ]);
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f64 = random();
+            let center = Vec3::new(
+                a as f64 + 0.9 * random::<f64>(),
+                0.2,
+                b as f64 + 0.9 * random::<f64>(),
+            );
+
+            if (&center - &Vec3::new(4.0, 0.2, 0.0)).len() > 0.9 {
+                // Diffuse
+                if choose_mat < 0.8 {
+                    let albedo = Color::random() * Color::random();
+                    let material = Lambertian::new(albedo);
+                    let new_center = &center + Vec3::new(0.0, random_in_interval(0.0, 0.5), 0.0);
+                    world.add(Sphere::new_in_motion(center, new_center, 0.2, material));
+                    continue;
+                }
+                // Metal
+                if choose_mat < 0.95 {
+                    let albedo = Color::random_min_max(0.5, 1.0);
+                    let fuzz = random_in_interval(0.0, 0.5);
+                    let material = Metal::new(albedo, fuzz);
+                    world.add(Sphere::new(center, 0.2, material));
+                    continue;
+                }
+                // Dielectric
+                let material = Dielectric::new(1.5);
+                world.add(Sphere::new(center, 0.2, material));
+            }
+        }
+    }
+
+    // Bigger spheres
+    world.add(Sphere::new(
+        Vec3::new(0.0, 1.0, 0.0),
+        1.0,
+        Dielectric::new(1.5),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(-4.0, 1.0, 0.0),
+        1.0,
+        Lambertian::new(Color::new(0.4, 0.2, 0.1)),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(4.0, 1.0, 0.0),
+        1.0,
+        Metal::new(Color::new(0.7, 0.6, 0.5), 0.0),
+    ));
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")

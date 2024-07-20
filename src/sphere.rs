@@ -9,6 +9,8 @@ use crate::{
 
 pub struct Sphere {
     center: Vec3,
+    // Point the sphere center is moving towards if in motion
+    direction: Option<Vec3>,
     radius: f64,
     material: Arc<dyn Material + Send + Sync>,
 }
@@ -22,15 +24,36 @@ impl Sphere {
         Sphere {
             center,
             radius,
+            direction: None,
             material: Arc::new(material),
         }
+    }
+
+    pub fn new_in_motion(
+        center1: Vec3,
+        center2: Vec3,
+        radius: f64,
+        material: impl Material + Send + Sync + 'static,
+    ) -> Self {
+        let direction = Some(&center2 - &center1);
+        Self {
+            center: center1,
+            direction,
+            radius,
+            material: Arc::new(material),
+        }
+    }
+
+    pub fn sphere_center(&self, time: f64) -> Vec3 {
+        &self.center + time * self.direction.as_ref().unwrap_or(&Vec3::default())
     }
 }
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray) -> Option<HitRecord> {
-        // (f64, Vec3, Arc<dyn Hittable + Send + Sync>)> {
-        let oc = &self.center - &ray.origin;
+        let center = self.sphere_center(ray.time);
+
+        let oc = &center - &ray.origin;
         let a = ray.direction.len_squared();
         let half_b = dot(&oc, &ray.direction);
         let c = oc.len_squared() - self.radius * self.radius;
@@ -51,7 +74,7 @@ impl Hittable for Sphere {
             }
         }
 
-        let outward_normal = (&ray.at(root) - &self.center) / self.radius;
+        let outward_normal = (&ray.at(root) - center) / self.radius;
 
         Some(HitRecord::new(
             ray,
