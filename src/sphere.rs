@@ -1,23 +1,23 @@
 use std::sync::Arc;
 
 use crate::{
-    interval::Interval,
-    material::Hittable,
+    hittables::{HitRecord, Hittable},
+    material::Material,
     ray::Ray,
-    vector::{dot, Vec3},
+    vector::{dot, Vec3, EPS},
 };
 
 pub struct Sphere {
     center: Vec3,
     radius: f64,
-    material: Arc<dyn Hittable + Send + Sync>,
+    material: Arc<dyn Material + Send + Sync>,
 }
 
 impl Sphere {
     pub fn new(
         center: Vec3,
         radius: f64,
-        material: impl Hittable + Send + Sync + 'static,
+        material: impl Material + Send + Sync + 'static,
     ) -> Sphere {
         Sphere {
             center,
@@ -25,12 +25,11 @@ impl Sphere {
             material: Arc::new(material),
         }
     }
+}
 
-    pub fn hit(
-        &self,
-        ray: &Ray,
-        hit_range: Interval,
-    ) -> Option<(f64, Vec3, Arc<dyn Hittable + Send + Sync>)> {
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
+        // (f64, Vec3, Arc<dyn Hittable + Send + Sync>)> {
         let oc = &self.center - &ray.origin;
         let a = ray.direction.len_squared();
         let half_b = dot(&oc, &ray.direction);
@@ -44,16 +43,21 @@ impl Sphere {
         let dsqrt = discriminant.sqrt();
         let mut root = (half_b - dsqrt) / a;
 
-        // TODO: do this outside?
-        // Exclude objects that are outside the interval
-        if !hit_range.surrounds(root) {
+        // filter out negative values
+        if root <= EPS {
             root = (half_b + dsqrt) / a;
-            if !hit_range.surrounds(root) {
+            if root <= EPS {
                 return None;
             }
         }
 
         let outward_normal = (&ray.at(root) - &self.center) / self.radius;
-        Some((root, outward_normal, self.material.clone()))
+
+        Some(HitRecord::new(
+            ray,
+            outward_normal,
+            root,
+            self.material.clone(),
+        ))
     }
 }

@@ -7,7 +7,7 @@ use crate::{
     vector::{dot, unit_vector, Vec3},
 };
 
-pub trait Hittable {
+pub trait Material {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
 }
 
@@ -22,7 +22,7 @@ impl Lambertian {
     }
 }
 
-impl Hittable for Lambertian {
+impl Material for Lambertian {
     fn scatter(&self, _: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
         let mut scatter_direction = &record.normal + Vec3::random_in_unit_sphere();
 
@@ -48,7 +48,7 @@ impl Metal {
     }
 }
 
-impl Hittable for Metal {
+impl Material for Metal {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
         let reflected = unit_vector(&reflect(&ray.direction, &record.normal))
             + self.fuzz * Vec3::random_in_unit_sphere();
@@ -73,7 +73,7 @@ impl Dielectric {
     }
 }
 
-impl Hittable for Dielectric {
+impl Material for Dielectric {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
         let eta_ratio = if record.front_face {
             1.0 / self.eta

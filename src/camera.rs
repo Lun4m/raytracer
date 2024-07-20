@@ -8,7 +8,7 @@ use rayon::prelude::*;
 
 use crate::{
     color::{color_to_string, Color},
-    interval::Interval,
+    hittables::Hittable,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
     world::World,
@@ -186,8 +186,8 @@ pub fn get_color(ray: Ray, world: &World, depth: i32) -> Color {
         return Color::default();
     }
 
-    if let Some(hit) = world.hit(&ray, Interval::positive()) {
-        return match hit.material.scatter(&ray, &hit) {
+    if let Some(hit_obj) = world.hit(&ray) {
+        return match hit_obj.material.scatter(&ray, &hit_obj) {
             Some((ray_scattered, attenuation)) => {
                 attenuation * get_color(ray_scattered, world, depth - 1)
             }
@@ -197,7 +197,6 @@ pub fn get_color(ray: Ray, world: &World, depth: i32) -> Color {
 
     // Sky box
     let unit_direction = unit_vector(&ray.direction);
-    // LERP transformation
     let percent = 0.5 * (unit_direction.y + 1.0);
     (1.0 - percent) * Color::white() + percent * Color::new(0.5, 0.7, 1.0)
 }

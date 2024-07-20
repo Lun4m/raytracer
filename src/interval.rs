@@ -24,7 +24,7 @@ impl Interval {
         }
     }
 
-    pub fn positive() -> Self {
+    pub fn _positive() -> Self {
         Interval {
             min: 0.001,
             max: INFINITY,
@@ -43,7 +43,7 @@ impl Interval {
         self.min <= x && self.max >= x
     }
 
-    pub fn surrounds(&self, x: f64) -> bool {
+    pub fn _surrounds(&self, x: f64) -> bool {
         self.min < x && self.max > x
     }
 
