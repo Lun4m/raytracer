@@ -1,8 +1,7 @@
-use rand::random;
-
 use crate::{
     color::Color,
     hittables::HitRecord,
+    random,
     ray::Ray,
     vector::{dot, unit_vector, Vec3},
 };
@@ -112,7 +111,7 @@ pub fn refract(v: &Vec3, n: &Vec3, eta_ratio: f64) -> Vec3 {
     // Should only happen for materials that have eta < eta of the external medium
     let cannot_refract = sin_theta * eta_ratio > 1.0;
     // Takes care of materials that respond differtly with the angle
-    let will_reflect = reflectance(cos_theta, eta_ratio) > random();
+    let will_reflect = reflectance(cos_theta, eta_ratio) > random::float();
     if cannot_refract || will_reflect {
         return reflect(v, n);
     }

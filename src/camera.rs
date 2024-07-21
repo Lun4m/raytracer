@@ -3,12 +3,13 @@ use std::{
     io::{stdout, BufWriter, Write},
 };
 
-use rand::random;
 use rayon::prelude::*;
 
 use crate::{
     color::{color_to_string, Color},
     hittables::Hittable,
+    interval::Interval,
+    random,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
     world::World,
@@ -154,7 +155,7 @@ impl Camera {
         let pixel_center = &self.pixel_00 + (i * &self.pixel_delta_u) + (j * &self.pixel_delta_v);
         let ray_target = pixel_center + self.pixel_sample_square();
         let ray_direction = ray_target - ray_origin.clone();
-        let ray_time = random();
+        let ray_time = random::float();
 
         Ray::new(ray_origin, ray_direction, ray_time)
     }
@@ -169,8 +170,8 @@ impl Camera {
     }
 
     fn pixel_sample_square(&self) -> Vec3 {
-        let px = -0.5 + random::<f64>();
-        let py = -0.5 + random::<f64>();
+        let px = -0.5 + random::float();
+        let py = -0.5 + random::float();
         (px * &self.pixel_delta_u) + (py * &self.pixel_delta_v)
     }
 }
@@ -187,7 +188,7 @@ pub fn get_color(ray: Ray, world: &World, depth: i32) -> Color {
         return Color::default();
     }
 
-    if let Some(hit_obj) = world.hit(&ray) {
+    if let Some(hit_obj) = world.hit(&ray, &Interval::_positive()) {
         return match hit_obj.material.scatter(&ray, &hit_obj) {
             Some((ray_scattered, attenuation)) => {
                 attenuation * get_color(ray_scattered, world, depth - 1)

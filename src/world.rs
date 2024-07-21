@@ -1,35 +1,73 @@
+use std::sync::Arc;
+
 use crate::{
     hittables::{HitRecord, Hittable},
+    interval::Interval,
     ray::Ray,
-    sphere::Sphere,
+    volumes::{BoundingBox, BvhNode},
 };
 
 pub struct World {
-    pub objects: Vec<Sphere>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
+    bbox: BoundingBox,
 }
 
 impl World {
     pub fn _new() -> Self {
         World {
             objects: Vec::new(),
+            bbox: BoundingBox::default(),
         }
     }
 
-    pub fn from(objects: Vec<Sphere>) -> Self {
-        Self { objects }
+    pub fn from_vec(objects: Vec<Arc<dyn Hittable + Send + Sync>>) -> Self {
+        Self {
+            objects,
+            bbox: BoundingBox::default(),
+        }
     }
 
-    pub fn add(&mut self, obj: Sphere) {
-        self.objects.push(obj);
+    pub fn add(&mut self, obj: impl Hittable + Send + Sync + 'static) {
+        self.bbox = BoundingBox::from_boxes(&self.bbox, obj.bounding_box());
+        self.objects.push(Arc::new(obj));
+    }
+}
+
+impl From<BvhNode> for World {
+    fn from(value: BvhNode) -> Self {
+        let bbox = value.bounding_box().clone();
+        Self {
+            objects: vec![Arc::new(value)],
+            bbox,
+        }
     }
 }
 
 impl Hittable for World {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         // I don't care if this is slower
+        // interval(ray_t.min, closest_so_far)
         self.objects
             .iter()
-            .filter_map(|obj| obj.hit(ray))
+            .filter_map(|obj| obj.hit(ray, ray_t))
             .min_by(|x, y| x.distance.total_cmp(&y.distance))
+
+        // self.objects
+        //     .iter()
+        //     .scan(ray_t.max, |closest_so_far, obj| {
+        //         match obj.hit(ray, &Interval::new(ray_t.min, *closest_so_far)) {
+        //             Some(record) => {
+        //                 *closest_so_far = record.distance;
+        //                 Some(Some(record))
+        //             }
+        //             None => Some(None),
+        //         }
+        //     })
+        //     .flatten()
+        //     .min_by(|x, y| x.distance.total_cmp(&y.distance))
+    }
+
+    fn bounding_box(&self) -> &BoundingBox {
+        todo!()
     }
 }

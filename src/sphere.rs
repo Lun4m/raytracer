@@ -1,10 +1,10 @@
-use std::sync::Arc;
-
 use crate::{
     hittables::{HitRecord, Hittable},
+    interval::Interval,
     material::Material,
     ray::Ray,
     vector::{dot, Vec3, EPS},
+    volumes::BoundingBox,
 };
 
 pub struct Sphere {
@@ -12,7 +12,8 @@ pub struct Sphere {
     // Point the sphere center is moving towards if in motion
     direction: Option<Vec3>,
     radius: f64,
-    material: Arc<dyn Material + Send + Sync>,
+    material: Box<dyn Material + Send + Sync>,
+    bbox: BoundingBox,
 }
 
 impl Sphere {
@@ -21,11 +22,14 @@ impl Sphere {
         radius: f64,
         material: impl Material + Send + Sync + 'static,
     ) -> Sphere {
+        let rvec = Vec3::new(radius, radius, radius);
+        let bbox = BoundingBox::from_extrema(&center - &rvec, &center + &rvec);
         Sphere {
             center,
             radius,
             direction: None,
-            material: Arc::new(material),
+            material: Box::new(material),
+            bbox,
         }
     }
 
@@ -36,11 +40,16 @@ impl Sphere {
         material: impl Material + Send + Sync + 'static,
     ) -> Self {
         let direction = Some(&center2 - &center1);
+        let rvec = Vec3::new(radius, radius, radius);
+        let bbox1 = BoundingBox::from_extrema(&center1 - &rvec, &center1 + &rvec);
+        let bbox2 = BoundingBox::from_extrema(&center2 - &rvec, &center2 + &rvec);
+        let bbox = BoundingBox::from_boxes(&bbox1, &bbox2);
         Self {
             center: center1,
             direction,
             radius,
-            material: Arc::new(material),
+            material: Box::new(material),
+            bbox,
         }
     }
 
@@ -50,7 +59,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, _: &Interval) -> Option<HitRecord> {
         let center = self.sphere_center(ray.time);
 
         let oc = &center - &ray.origin;
@@ -80,7 +89,11 @@ impl Hittable for Sphere {
             ray,
             outward_normal,
             root,
-            self.material.clone(),
+            self.material.as_ref(),
         ))
+    }
+
+    fn bounding_box(&self) -> &BoundingBox {
+        &self.bbox
     }
 }
