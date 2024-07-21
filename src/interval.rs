@@ -1,6 +1,6 @@
 use std::f64::INFINITY;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -43,6 +43,10 @@ impl Interval {
             min: -INFINITY,
             max: 0.0,
         }
+    }
+
+    pub fn span(&self) -> f64 {
+        self.max - self.min
     }
 
     // TODO: check that these methods are correct

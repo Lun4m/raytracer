@@ -10,7 +10,7 @@ use crate::{
 };
 
 // Axis Aligned Bounding Box
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BoundingBox {
     x: Interval,
     y: Interval,
@@ -45,6 +45,19 @@ impl BoundingBox {
         let y = Interval::from_intervals(&a.y, &b.y);
         let z = Interval::from_intervals(&a.z, &b.z);
         Self { x, y, z }
+    }
+    pub fn longest_axis(&self) -> usize {
+        if self.x.span() > self.y.span() {
+            if self.x.span() > self.z.span() {
+                return 0;
+            }
+            return 2;
+        }
+        if self.y.span() > self.z.span() {
+            return 1;
+        }
+
+        2
     }
 
     pub fn hit(&self, ray: &Ray, mut ray_t: Interval) -> bool {
@@ -103,46 +116,45 @@ pub struct BvhNode {
 
 impl BvhNode {
     pub fn new(
-        objects: &mut Vec<Arc<dyn Hittable + Send + Sync>>,
+        src_objects: &Vec<Arc<dyn Hittable + Send + Sync>>,
         start: usize,
         end: usize,
     ) -> Self {
-        let axis = random::usize(0, 2);
+        // TODO: need to clone everytime? Doesn't seem that smart
+        let mut objects = src_objects.clone();
+        let bbox = objects
+            .iter()
+            .take(end)
+            .skip(start)
+            .fold(BoundingBox::default(), |bbox, obj| {
+                BoundingBox::from_boxes(bbox, obj.bounding_box())
+            });
+
+        let axis = bbox.longest_axis();
         let span = end - start;
 
-        match span {
-            1 => Self {
-                left: objects[start].clone(),
-                right: objects[start].clone(),
-                bbox: objects[start].bounding_box(),
-            },
-            2 => Self {
-                left: objects[start].clone(),
-                right: objects[start + 1].clone(),
-                bbox: BoundingBox::from_boxes(
-                    objects[start].bounding_box(),
-                    objects[start + 1].bounding_box(),
-                ),
-            },
+        let (left, right) = match span {
+            1 => (objects[start].clone(), objects[start].clone()),
+            2 => (objects[start].clone(), objects[start + 1].clone()),
             _ => {
                 objects.sort_by(|a, b| box_compare(a.clone(), b.clone(), axis));
-                let mid = start + span / 2;
-                let left = Self::new(objects, start, mid);
-                let right = Self::new(objects, mid, end);
-                let bbox = BoundingBox::from_boxes(left.bounding_box(), right.bounding_box());
 
-                Self {
-                    left: Arc::new(left),
-                    right: Arc::new(right),
-                    bbox,
-                }
+                let mid = start + span / 2;
+                let left = Arc::new(Self::new(src_objects, start, mid));
+                let right = Arc::new(Self::new(src_objects, mid, end));
+                (
+                    left as Arc<dyn Hittable + Send + Sync>,
+                    right as Arc<dyn Hittable + Send + Sync>,
+                )
             }
-        }
+        };
+
+        Self { left, right, bbox }
     }
 
-    pub fn from_world(mut world: World) -> Self {
+    pub fn from_world(world: World) -> Self {
         let len = world.objects.len();
-        Self::new(&mut world.objects, 0, len)
+        Self::new(&world.objects, 0, len)
     }
 }
 
