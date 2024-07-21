@@ -56,8 +56,7 @@ fn main() {
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
                     let material = Lambertian::new(albedo);
-                    let new_center = &center + Vec3::new(0.0, random::in_interval(0.0, 0.5), 0.0);
-                    world.add(Sphere::new_in_motion(center, new_center, 0.2, material));
+                    world.add(Sphere::new(center, 0.2, material));
                     continue;
                 }
                 // Metal

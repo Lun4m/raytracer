@@ -1,4 +1,4 @@
-use std::{cmp::min, ops::Index, rc::Rc, sync::Arc};
+use std::{cmp::min, ops::Index, sync::Arc};
 
 use crate::{
     hittables::{HitRecord, Hittable},
@@ -18,6 +18,7 @@ pub struct BoundingBox {
 }
 
 impl Default for BoundingBox {
+    /// Returns an empty bounding box
     fn default() -> Self {
         Self {
             x: Interval::empty(),
@@ -33,48 +34,26 @@ impl BoundingBox {
     }
 
     pub fn from_extrema(a: Vec3, b: Vec3) -> Self {
-        // let x = if a.x <= b.x {
-        //     Interval::new(a.x, b.x)
-        // } else {
-        //     Interval::new(b.x, a.x)
-        // };
-        // let y = if a.y <= b.y {
-        //     Interval::new(a.y, b.y)
-        // } else {
-        //     Interval::new(b.y, a.y)
-        // };
-        // let z = if a.z <= b.z {
-        //     Interval::new(a.z, b.z)
-        // } else {
-        //     Interval::new(b.z, a.z)
-        // };
         let x = Interval::new(a.x.min(b.x), a.x.max(b.x));
         let y = Interval::new(a.y.min(b.y), a.y.max(b.y));
         let z = Interval::new(a.z.min(b.z), a.z.max(b.z));
         Self { x, y, z }
     }
 
-    pub fn from_boxes(a: &Self, b: &Self) -> Self {
+    pub fn from_boxes(a: Self, b: Self) -> Self {
         let x = Interval::from_intervals(&a.x, &b.x);
         let y = Interval::from_intervals(&a.y, &b.y);
         let z = Interval::from_intervals(&a.z, &b.z);
         Self { x, y, z }
     }
 
-    pub fn from_box(a: &Self) -> Self {
-        Self {
-            x: a.x.clone(),
-            y: a.y.clone(),
-            z: a.z.clone(),
-        }
-    }
-
     pub fn hit(&self, ray: &Ray, mut ray_t: Interval) -> bool {
+        // TODO: can this be simplified?
         for axis in 0..3 {
             let ax = &self[axis];
-            let adinv = 1.0 / ray.direction[axis]; // ray_dir[axis]
+            let adinv = 1.0 / ray.direction[axis];
 
-            // Bounding box - Ray intersection
+            // Bounding box - Ray intersections
             let t0 = (ax.min - ray.origin[axis]) * adinv;
             let t1 = (ax.max - ray.origin[axis]) * adinv;
 
@@ -115,21 +94,19 @@ impl Index<usize> for BoundingBox {
     }
 }
 
-// pub struct BvhTree {
-//     objects:
-// }
-
 // Bounding Volume Hierarhcy
 pub struct BvhNode {
-    // TODO: leaf nodes need to be the objects!
     left: Arc<dyn Hittable + Send + Sync>,
     right: Arc<dyn Hittable + Send + Sync>,
-    // val: Option<usize>,
     bbox: BoundingBox,
 }
 
 impl BvhNode {
-    pub fn new(objects: &Vec<Arc<dyn Hittable + Send + Sync>>, start: usize, end: usize) -> Self {
+    pub fn new(
+        objects: &mut Vec<Arc<dyn Hittable + Send + Sync>>,
+        start: usize,
+        end: usize,
+    ) -> Self {
         let axis = random::usize(0, 2);
         let span = end - start;
 
@@ -137,7 +114,7 @@ impl BvhNode {
             1 => Self {
                 left: objects[start].clone(),
                 right: objects[start].clone(),
-                bbox: BoundingBox::from_box(objects[start].bounding_box()),
+                bbox: objects[start].bounding_box(),
             },
             2 => Self {
                 left: objects[start].clone(),
@@ -148,9 +125,7 @@ impl BvhNode {
                 ),
             },
             _ => {
-                // sort vec??
-                //
-                //
+                objects.sort_by(|a, b| box_compare(a.clone(), b.clone(), axis));
                 let mid = start + span / 2;
                 let left = Self::new(objects, start, mid);
                 let right = Self::new(objects, mid, end);
@@ -165,19 +140,31 @@ impl BvhNode {
         }
     }
 
-    pub fn from_world(world: World) -> Self {
-        Self::new(&world.objects, 0, world.objects.len())
+    pub fn from_world(mut world: World) -> Self {
+        let len = world.objects.len();
+        Self::new(&mut world.objects, 0, len)
     }
 }
 
+fn box_compare(
+    a: Arc<dyn Hittable + Send + Sync>,
+    b: Arc<dyn Hittable + Send + Sync>,
+    axis: usize,
+) -> std::cmp::Ordering {
+    let a_interval = &a.bounding_box()[axis];
+    let b_interval = &b.bounding_box()[axis];
+
+    a_interval.min.total_cmp(&b_interval.min)
+}
+
 impl Hittable for BvhNode {
-    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
-        if !self.bbox.hit(ray, ray_t.clone()) {
+    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
+        if !self.bbox.hit(ray, Interval::_positive()) {
             return None;
         }
 
-        let hit_left = self.left.hit(ray, ray_t);
-        let hit_right = self.right.hit(ray, ray_t);
+        let hit_left = self.left.hit(ray);
+        let hit_right = self.right.hit(ray);
 
         match (hit_left, hit_right) {
             (Some(a), Some(b)) => Some(min(a, b)),
@@ -186,7 +173,7 @@ impl Hittable for BvhNode {
         }
     }
 
-    fn bounding_box(&self) -> &BoundingBox {
-        &self.bbox
+    fn bounding_box(&self) -> BoundingBox {
+        self.bbox.clone()
     }
 }

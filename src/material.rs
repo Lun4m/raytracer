@@ -45,6 +45,11 @@ impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> Self {
         Self { albedo, fuzz }
     }
+
+    pub fn reflectance(&self, cos: f64) -> Color {
+        // Schlink's approximation for metals
+        &self.albedo + (Color::white() - &self.albedo) * (1.0 - cos).powi(5)
+    }
 }
 
 impl Material for Metal {
@@ -55,8 +60,9 @@ impl Material for Metal {
         let ray_direction = reflected + self.fuzz * Vec3::random_in_unit_sphere();
         let scattered = Ray::new(record.point.clone(), ray_direction, ray.time);
 
-        if dot(&scattered.direction, &record.normal) > 0.0 {
-            return Some((scattered, self.albedo.clone()));
+        let cosine = dot(&scattered.direction, &record.normal);
+        if cosine > 0.0 {
+            return Some((scattered, self.reflectance(cosine)));
         }
         None
     }

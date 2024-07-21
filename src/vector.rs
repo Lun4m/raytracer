@@ -191,6 +191,14 @@ impl ops::Sub<Vec3> for Vec3 {
     }
 }
 
+impl ops::Sub<&Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: &Vec3) -> Self::Output {
+        Vec3::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
 impl ops::Sub<Vec3> for &Vec3 {
     type Output = Vec3;
 

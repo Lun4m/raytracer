@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use crate::{
     hittables::{HitRecord, Hittable},
-    interval::Interval,
     ray::Ray,
     volumes::{BoundingBox, BvhNode},
 };
@@ -28,7 +27,7 @@ impl World {
     }
 
     pub fn add(&mut self, obj: impl Hittable + Send + Sync + 'static) {
-        self.bbox = BoundingBox::from_boxes(&self.bbox, obj.bounding_box());
+        self.bbox = BoundingBox::from_boxes(self.bbox.clone(), obj.bounding_box());
         self.objects.push(Arc::new(obj));
     }
 }
@@ -44,12 +43,13 @@ impl From<BvhNode> for World {
 }
 
 impl Hittable for World {
-    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
         // I don't care if this is slower
-        // interval(ray_t.min, closest_so_far)
+        // TODO: this is completely useless with BVH?
+        // self.objects should be the BVH tree?
         self.objects
             .iter()
-            .filter_map(|obj| obj.hit(ray, ray_t))
+            .filter_map(|obj| obj.hit(ray))
             .min_by(|x, y| x.distance.total_cmp(&y.distance))
 
         // self.objects
@@ -67,7 +67,7 @@ impl Hittable for World {
         //     .min_by(|x, y| x.distance.total_cmp(&y.distance))
     }
 
-    fn bounding_box(&self) -> &BoundingBox {
+    fn bounding_box(&self) -> BoundingBox {
         todo!()
     }
 }

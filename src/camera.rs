@@ -8,7 +8,6 @@ use rayon::prelude::*;
 use crate::{
     color::{color_to_string, Color},
     hittables::Hittable,
-    interval::Interval,
     random,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
@@ -188,7 +187,7 @@ pub fn get_color(ray: Ray, world: &World, depth: i32) -> Color {
         return Color::default();
     }
 
-    if let Some(hit_obj) = world.hit(&ray, &Interval::_positive()) {
+    if let Some(hit_obj) = world.hit(&ray) {
         return match hit_obj.material.scatter(&ray, &hit_obj) {
             Some((ray_scattered, attenuation)) => {
                 attenuation * get_color(ray_scattered, world, depth - 1)

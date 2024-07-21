@@ -1,6 +1,5 @@
 use crate::{
     hittables::{HitRecord, Hittable},
-    interval::Interval,
     material::Material,
     ray::Ray,
     vector::{dot, Vec3, EPS},
@@ -43,7 +42,7 @@ impl Sphere {
         let rvec = Vec3::new(radius, radius, radius);
         let bbox1 = BoundingBox::from_extrema(&center1 - &rvec, &center1 + &rvec);
         let bbox2 = BoundingBox::from_extrema(&center2 - &rvec, &center2 + &rvec);
-        let bbox = BoundingBox::from_boxes(&bbox1, &bbox2);
+        let bbox = BoundingBox::from_boxes(bbox1, bbox2);
         Self {
             center: center1,
             direction,
@@ -59,7 +58,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, _: &Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
         let center = self.sphere_center(ray.time);
 
         let oc = &center - &ray.origin;
@@ -93,7 +92,7 @@ impl Hittable for Sphere {
         ))
     }
 
-    fn bounding_box(&self) -> &BoundingBox {
-        &self.bbox
+    fn bounding_box(&self) -> BoundingBox {
+        self.bbox.clone()
     }
 }
