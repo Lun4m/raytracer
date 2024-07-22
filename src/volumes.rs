@@ -1,9 +1,9 @@
+// TODO: this whole module needs to be rewritten in a sane way
 use std::{cmp::min, ops::Index, sync::Arc};
 
 use crate::{
     hittables::{HitRecord, Hittable},
     interval::Interval,
-    random,
     ray::Ray,
     vector::Vec3,
     world::World,
@@ -115,13 +115,7 @@ pub struct BvhNode {
 }
 
 impl BvhNode {
-    pub fn new(
-        src_objects: &Vec<Arc<dyn Hittable + Send + Sync>>,
-        start: usize,
-        end: usize,
-    ) -> Self {
-        // TODO: need to clone everytime? Doesn't seem that smart
-        let mut objects = src_objects.clone();
+    pub fn new(objects: &mut [Arc<dyn Hittable + Send + Sync>], start: usize, end: usize) -> Self {
         let bbox = objects
             .iter()
             .take(end)
@@ -137,11 +131,16 @@ impl BvhNode {
             1 => (objects[start].clone(), objects[start].clone()),
             2 => (objects[start].clone(), objects[start + 1].clone()),
             _ => {
-                objects.sort_by(|a, b| box_compare(a.clone(), b.clone(), axis));
+                objects[start..end].sort_by(|a, b| {
+                    let a_interval = &a.bounding_box()[axis];
+                    let b_interval = &b.bounding_box()[axis];
+
+                    a_interval.min.partial_cmp(&b_interval.min).unwrap()
+                });
 
                 let mid = start + span / 2;
-                let left = Arc::new(Self::new(src_objects, start, mid));
-                let right = Arc::new(Self::new(src_objects, mid, end));
+                let left = Arc::new(Self::new(objects, start, mid));
+                let right = Arc::new(Self::new(objects, mid, end));
                 (
                     left as Arc<dyn Hittable + Send + Sync>,
                     right as Arc<dyn Hittable + Send + Sync>,
@@ -152,21 +151,10 @@ impl BvhNode {
         Self { left, right, bbox }
     }
 
-    pub fn from_world(world: World) -> Self {
+    pub fn from_world(mut world: World) -> Self {
         let len = world.objects.len();
-        Self::new(&world.objects, 0, len)
+        Self::new(&mut world.objects, 0, len)
     }
-}
-
-fn box_compare(
-    a: Arc<dyn Hittable + Send + Sync>,
-    b: Arc<dyn Hittable + Send + Sync>,
-    axis: usize,
-) -> std::cmp::Ordering {
-    let a_interval = &a.bounding_box()[axis];
-    let b_interval = &b.bounding_box()[axis];
-
-    a_interval.min.total_cmp(&b_interval.min)
 }
 
 impl Hittable for BvhNode {
@@ -175,6 +163,9 @@ impl Hittable for BvhNode {
             return None;
         }
 
+        // TODO: these need the interval so
+        // boxes down the tree can filter out
+        // rays that do not intersect?
         let hit_left = self.left.hit(ray);
         let hit_right = self.right.hit(ray);
 
