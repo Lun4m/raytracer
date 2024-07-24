@@ -51,7 +51,7 @@ fn main() {
                 b as f64 + 0.9 * random::float(),
             );
 
-            if (&center - &Vec3::new(4.0, 0.2, 0.0)).len() > 0.9 {
+            if (&center - Vec3::new(4.0, 0.2, 0.0)).len() > 0.9 {
                 // Diffuse
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
@@ -92,7 +92,7 @@ fn main() {
         Metal::new(Color::new(0.7, 0.6, 0.5), 0.0),
     ));
 
-    let world = BvhNode::from_world(world).into();
+    let world = BvhNode::from_world(world);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")

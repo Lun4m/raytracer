@@ -11,6 +11,7 @@ use crate::{
     random,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
+    volumes::BvhNode,
     world::World,
 };
 
@@ -117,7 +118,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: World) -> std::io::Result<()> {
+    pub fn render(&self, world: BvhNode) -> std::io::Result<()> {
         let file = File::create("out.ppm")?;
         let mut writer = BufWriter::new(file);
 
@@ -182,7 +183,7 @@ impl Default for Camera {
 }
 
 // TODO: get rid of recursion?
-pub fn get_color(ray: Ray, world: &World, depth: i32) -> Color {
+pub fn get_color(ray: Ray, world: &BvhNode, depth: i32) -> Color {
     if depth <= 0 {
         return Color::default();
     }

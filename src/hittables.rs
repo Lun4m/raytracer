@@ -53,6 +53,8 @@ impl PartialOrd for HitRecord<'_> {
 
 impl Ord for HitRecord<'_> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.distance.total_cmp(&other.distance)
+        self.distance
+            .partial_cmp(&other.distance)
+            .expect("Should not compare NaNs")
     }
 }

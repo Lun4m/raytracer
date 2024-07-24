@@ -116,10 +116,8 @@ pub struct BvhNode {
 
 impl BvhNode {
     pub fn new(objects: &mut [Arc<dyn Hittable + Send + Sync>], start: usize, end: usize) -> Self {
-        let bbox = objects
+        let bbox = objects[start..end]
             .iter()
-            .take(end)
-            .skip(start)
             .fold(BoundingBox::default(), |bbox, obj| {
                 BoundingBox::from_boxes(bbox, obj.bounding_box())
             });
