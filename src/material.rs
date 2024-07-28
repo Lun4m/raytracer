@@ -23,15 +23,15 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
-        let mut scatter_direction = &record.normal + Vec3::random_in_unit_sphere();
+        let mut scatter_direction = record.normal + Vec3::random_in_unit_sphere();
 
         if scatter_direction.near_zero() {
-            scatter_direction = record.normal.clone();
+            scatter_direction = record.normal;
         }
 
         Some((
-            Ray::new(record.point.clone(), scatter_direction, ray.time),
-            self.albedo.clone(),
+            Ray::new(record.point, scatter_direction, ray.time),
+            self.albedo,
         ))
     }
 }
@@ -48,19 +48,19 @@ impl Metal {
 
     pub fn reflectance(&self, cos: f64) -> Color {
         // Schlink's approximation for metals
-        &self.albedo + (Color::white() - &self.albedo) * (1.0 - cos).powi(5)
+        self.albedo + (Color::white() - self.albedo) * (1.0 - cos).powi(5)
     }
 }
 
 impl Material for Metal {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
-        let reflected = unit_vector(&reflect(&ray.direction, &record.normal))
+        let reflected = unit_vector(reflect(ray.direction, record.normal))
             + self.fuzz * Vec3::random_in_unit_sphere();
 
         let ray_direction = reflected + self.fuzz * Vec3::random_in_unit_sphere();
-        let scattered = Ray::new(record.point.clone(), ray_direction, ray.time);
+        let scattered = Ray::new(record.point, ray_direction, ray.time);
 
-        let cosine = dot(&scattered.direction, &record.normal);
+        let cosine = dot(scattered.direction, record.normal);
         if cosine > 0.0 {
             return Some((scattered, self.reflectance(cosine)));
         }
@@ -86,18 +86,15 @@ impl Material for Dielectric {
             self.eta
         };
 
-        let unit_direction = unit_vector(&ray.direction);
-        let out_direction = refract(&unit_direction, &record.normal, eta_ratio);
+        let unit_direction = unit_vector(ray.direction);
+        let out_direction = refract(unit_direction, record.normal, eta_ratio);
 
         let attenuation = Color::white();
-        Some((
-            Ray::new(record.point.clone(), out_direction, ray.time),
-            attenuation,
-        ))
+        Some((Ray::new(record.point, out_direction, ray.time), attenuation))
     }
 }
 
-pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * dot(v, n) * n
 }
 
@@ -109,7 +106,7 @@ pub fn reflectance(cos: f64, eta_ratio: f64) -> f64 {
     rsqrd + (1.0 - rsqrd) * (1.0 - cos).powi(5)
 }
 
-pub fn refract(v: &Vec3, n: &Vec3, eta_ratio: f64) -> Vec3 {
+pub fn refract(v: Vec3, n: Vec3, eta_ratio: f64) -> Vec3 {
     let cos_theta = (-dot(v, n)).min(1.0);
     let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 

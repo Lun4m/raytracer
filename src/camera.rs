@@ -12,7 +12,6 @@ use crate::{
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
     volumes::BvhNode,
-    world::World,
 };
 
 pub struct CameraConfig {
@@ -81,22 +80,21 @@ impl Camera {
 
         // Calculate camera frame basis vectors
         // (u ~= x, v ~= y, w ~= z)
-        let w = unit_vector(&(&center - &config.look_at)); // opposite to view direction
-        let u = unit_vector(&cross(&config.up_direction, &w));
-        let v = cross(&w, &u);
+        let w = unit_vector(center - config.look_at); // opposite to view direction
+        let u = unit_vector(cross(config.up_direction, w));
+        let v = cross(w, u);
 
         // vievport vectors
-        let viewport_u = viewport_width * &u; // horizonatal left -> right
-        let viewport_v = -viewport_height * &v; // vertical top -> down
+        let viewport_u = viewport_width * u; // horizonatal left -> right
+        let viewport_v = -viewport_height * v; // vertical top -> down
 
         // Calculate horizontal and vertical pixel spacing vectors
-        let pixel_delta_u = &viewport_u / config.image_width;
-        let pixel_delta_v = &viewport_v / image_height;
+        let pixel_delta_u = viewport_u / config.image_width;
+        let pixel_delta_v = viewport_v / image_height;
 
         // Calculate location of upper left pixel
-        let viewport_upperleft =
-            &center - (config.focus_dist * w) - 0.5 * (viewport_u + viewport_v);
-        let pixel_00 = viewport_upperleft + 0.5 * (&pixel_delta_u + &pixel_delta_v);
+        let viewport_upperleft = center - (config.focus_dist * w) - 0.5 * (viewport_u + viewport_v);
+        let pixel_00 = viewport_upperleft + 0.5 * (pixel_delta_u + pixel_delta_v);
 
         // Calculate defocus disk
         let defocus_radius = config.focus_dist * (0.5 * config.defocus_angle).to_radians().tan();
@@ -150,11 +148,11 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {
-        let ray_origin = &self.center + &self.defocus_disk_sample();
+        let ray_origin = self.center + self.defocus_disk_sample();
 
-        let pixel_center = &self.pixel_00 + (i * &self.pixel_delta_u) + (j * &self.pixel_delta_v);
+        let pixel_center = self.pixel_00 + (i * self.pixel_delta_u) + (j * self.pixel_delta_v);
         let ray_target = pixel_center + self.pixel_sample_square();
-        let ray_direction = ray_target - ray_origin.clone();
+        let ray_direction = ray_target - ray_origin;
         let ray_time = random::float();
 
         Ray::new(ray_origin, ray_direction, ray_time)
@@ -166,13 +164,13 @@ impl Camera {
         }
 
         let vec = Vec3::random_in_unit_disk();
-        (vec.x * &self.defocus_disk_u) + (vec.y * &self.defocus_disk_v)
+        (vec.x * self.defocus_disk_u) + (vec.y * self.defocus_disk_v)
     }
 
     fn pixel_sample_square(&self) -> Vec3 {
         let px = -0.5 + random::float();
         let py = -0.5 + random::float();
-        (px * &self.pixel_delta_u) + (py * &self.pixel_delta_v)
+        (px * self.pixel_delta_u) + (py * self.pixel_delta_v)
     }
 }
 
@@ -198,7 +196,7 @@ pub fn get_color(ray: Ray, world: &BvhNode, depth: i32) -> Color {
     }
 
     // Sky box
-    let unit_direction = unit_vector(&ray.direction);
+    let unit_direction = unit_vector(ray.direction);
     let percent = 0.5 * (unit_direction.y + 1.0);
     (1.0 - percent) * Color::white() + percent * Color::new(0.5, 0.7, 1.0)
 }

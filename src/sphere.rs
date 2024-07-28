@@ -22,7 +22,7 @@ impl Sphere {
         material: impl Material + Send + Sync + 'static,
     ) -> Sphere {
         let rvec = Vec3::new(radius, radius, radius);
-        let bbox = BoundingBox::from_extrema(&center - &rvec, &center + &rvec);
+        let bbox = BoundingBox::from_extrema(center - rvec, center + rvec);
         Sphere {
             center,
             radius,
@@ -38,10 +38,10 @@ impl Sphere {
         radius: f64,
         material: impl Material + Send + Sync + 'static,
     ) -> Self {
-        let direction = Some(&center2 - &center1);
+        let direction = Some(center2 - center1);
         let rvec = Vec3::new(radius, radius, radius);
-        let bbox1 = BoundingBox::from_extrema(&center1 - &rvec, &center1 + &rvec);
-        let bbox2 = BoundingBox::from_extrema(&center2 - &rvec, &center2 + &rvec);
+        let bbox1 = BoundingBox::from_extrema(center1 - rvec, center1 + rvec);
+        let bbox2 = BoundingBox::from_extrema(center2 - rvec, center2 + rvec);
         let bbox = BoundingBox::from_boxes(bbox1, bbox2);
         Self {
             center: center1,
@@ -53,7 +53,7 @@ impl Sphere {
     }
 
     pub fn sphere_center(&self, time: f64) -> Vec3 {
-        &self.center + time * self.direction.as_ref().unwrap_or(&Vec3::default())
+        self.center + time * self.direction.unwrap_or_default()
     }
 }
 
@@ -61,9 +61,9 @@ impl Hittable for Sphere {
     fn hit(&self, ray: &Ray) -> Option<HitRecord> {
         let center = self.sphere_center(ray.time);
 
-        let oc = &center - &ray.origin;
+        let oc = center - ray.origin;
         let a = ray.direction.len_squared();
-        let half_b = dot(&oc, &ray.direction);
+        let half_b = dot(oc, ray.direction);
         let c = oc.len_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
 
@@ -82,7 +82,7 @@ impl Hittable for Sphere {
             }
         }
 
-        let outward_normal = (&ray.at(root) - center) / self.radius;
+        let outward_normal = (ray.at(root) - center) / self.radius;
 
         Some(HitRecord::new(
             ray,

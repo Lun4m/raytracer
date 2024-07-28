@@ -31,7 +31,7 @@ impl Interval {
         }
     }
 
-    pub fn _positive() -> Self {
+    pub fn positive() -> Self {
         Interval {
             min: 0.001,
             max: INFINITY,
@@ -69,7 +69,7 @@ impl Interval {
         x
     }
 
-    pub fn expand(&self, delta: f64) -> Self {
+    pub fn _expand(&self, delta: f64) -> Self {
         let padding = 0.5 * delta;
         Self::new(self.min - padding, self.max + padding)
     }

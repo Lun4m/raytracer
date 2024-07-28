@@ -6,7 +6,7 @@ pub fn float() -> f64 {
     random()
 }
 
-pub fn usize(min: usize, max: usize) -> usize {
+pub fn _usize(min: usize, max: usize) -> usize {
     min + (max + 1 - min) * random::<usize>()
 }
 

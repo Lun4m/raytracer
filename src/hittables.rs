@@ -24,7 +24,7 @@ pub struct HitRecord<'a> {
 impl<'a> HitRecord<'a> {
     pub fn new(ray: &Ray, normal: Vec3, distance: f64, material: &'a dyn Material) -> Self {
         let point = ray.at(distance);
-        let front_face = dot(&ray.direction, &normal) < 0.0;
+        let front_face = dot(ray.direction, normal) < 0.0;
         let normal = if front_face { normal } else { -normal };
 
         Self {

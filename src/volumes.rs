@@ -1,3 +1,4 @@
+use core::panic;
 // TODO: this whole module needs to be rewritten in a sane way
 use std::{cmp::min, ops::Index, sync::Arc};
 
@@ -29,7 +30,7 @@ impl Default for BoundingBox {
 }
 
 impl BoundingBox {
-    pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
+    pub fn _new(x: Interval, y: Interval, z: Interval) -> Self {
         Self { x, y, z }
     }
 
@@ -60,8 +61,10 @@ impl BoundingBox {
         2
     }
 
-    pub fn hit(&self, ray: &Ray, mut ray_t: Interval) -> bool {
+    pub fn hit(&self, ray: &Ray) -> bool {
         // TODO: can this be simplified?
+        let mut ray_t = Interval::positive();
+
         for axis in 0..3 {
             let ax = &self[axis];
             let adinv = 1.0 / ray.direction[axis];
@@ -86,6 +89,7 @@ impl BoundingBox {
                 }
             }
         }
+
         if ray_t.max <= ray_t.min {
             return false;
         }
@@ -97,13 +101,12 @@ impl Index<usize> for BoundingBox {
     type Output = Interval;
 
     fn index(&self, index: usize) -> &Self::Output {
-        if index == 1 {
-            return &self.y;
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Cannot index above 2"),
         }
-        if index == 2 {
-            return &self.z;
-        }
-        &self.x
     }
 }
 
@@ -157,7 +160,7 @@ impl BvhNode {
 
 impl Hittable for BvhNode {
     fn hit(&self, ray: &Ray) -> Option<HitRecord> {
-        if !self.bbox.hit(ray, Interval::_positive()) {
+        if !self.bbox.hit(ray) {
             return None;
         }
 

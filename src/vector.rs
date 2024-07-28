@@ -2,7 +2,7 @@ use std::ops::{self, Index};
 
 use crate::random;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -53,22 +53,22 @@ impl Vec3 {
     // This one is 20% faster for me compared to the rejection method
     pub fn random_in_unit_sphere() -> Self {
         let u = random::float();
-        u.cbrt() * unit_vector(&Self::random_normal())
+        u.cbrt() * unit_vector(Self::random_normal())
     }
 
     // uniformely sample a point in a unit circle on the xy plane
     pub fn random_in_unit_disk() -> Vec3 {
         let u = random::float();
-        u.sqrt() * unit_vector(&Self::random_normal_xy())
+        u.sqrt() * unit_vector(Self::random_normal_xy())
     }
 
     pub fn random_in_unit_cube() -> Self {
-        unit_vector(&Self::random_min_max(-1.0, 1.0))
+        unit_vector(Self::random_min_max(-1.0, 1.0))
     }
 
-    pub fn random_on_hemisphere(normal: &Vec3) -> Self {
+    pub fn random_on_hemisphere(normal: Vec3) -> Self {
         let on_unit_sphere = Self::random_in_unit_sphere();
-        let sign = dot(&on_unit_sphere, normal).signum();
+        let sign = dot(on_unit_sphere, normal).signum();
         sign * on_unit_sphere
     }
 
@@ -93,17 +93,16 @@ impl Index<usize> for Vec3 {
     type Output = f64;
 
     fn index(&self, index: usize) -> &Self::Output {
-        if index == 1 {
-            return &self.y;
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Cannot index above 2"),
         }
-        if index == 2 {
-            return &self.z;
-        }
-        &self.x
     }
 }
 
-// TODO: use macro to register these traits
+// TODO: use macro to register these traits?
 impl ops::Neg for Vec3 {
     type Output = Vec3;
 
@@ -373,11 +372,11 @@ impl core::iter::Sum for Vec3 {
     }
 }
 
-pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
+pub fn dot(u: Vec3, v: Vec3) -> f64 {
     u.x * v.x + u.y * v.y + u.z * v.z
 }
 
-pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
+pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
     Vec3::new(
         u.y * v.z - u.z * v.y,
         u.z * v.x - u.x * v.z,
@@ -385,6 +384,6 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     )
 }
 
-pub fn unit_vector(v: &Vec3) -> Vec3 {
+pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.len()
 }
