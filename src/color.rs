@@ -6,6 +6,10 @@ impl Color {
     pub fn white() -> Color {
         Color::new(1.0, 1.0, 1.0)
     }
+
+    pub fn from_f32_slice(slice: &[f32]) -> Self {
+        Self::new(slice[0].into(), slice[1].into(), slice[2].into())
+    }
 }
 
 fn linear_to_gamma(linear_component: f64) -> f64 {

@@ -100,10 +100,7 @@ impl Texture for ImageTexture {
 
         let i = (u * self.img.width as f64) as usize;
         let j = (v * self.img.height as f64) as usize;
-        let pixel = self.img.pixel_data(i, j);
 
-        let color_scale = 1.0 / 255.0;
-
-        color_scale * Color::new(pixel[0].into(), pixel[1].into(), pixel[2].into())
+        self.img.pixel_color(i, j)
     }
 }
