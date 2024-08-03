@@ -3,6 +3,7 @@ use std::{env::args, process::exit};
 mod camera;
 mod color;
 mod hittables;
+mod image;
 mod interval;
 mod material;
 mod random;
@@ -14,7 +15,7 @@ mod vector;
 mod volumes;
 mod world;
 
-const SCENE_NAMES: [&str; 2] = ["bouncing_spheres", "checkered_spheres"];
+const SCENE_NAMES: [&str; 3] = ["bouncing_spheres", "checkered_spheres", "earth"];
 
 fn usage() {
     println!("USAGE: raytracer <scene_name>\n\nValid scene names:");
@@ -33,6 +34,7 @@ fn main() {
     match scene.as_str() {
         "bouncing_spheres" => scenes::bouncing_spheres(),
         "checkered_spheres" => scenes::checkered_spheres(),
+        "earth" => scenes::earth(),
         _ => usage(),
     }
 }

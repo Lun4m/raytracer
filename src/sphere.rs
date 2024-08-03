@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use crate::{
     hittables::{HitRecord, Hittable},
     material::Material,
@@ -55,6 +57,16 @@ impl Sphere {
     pub fn sphere_center(&self, time: f64) -> Vec3 {
         self.center + time * self.direction.unwrap_or_default()
     }
+
+    // Get texture mapped coordinates of a given `point` on the sphere
+    pub fn get_uv(point: Vec3) -> (f64, f64) {
+        let theta = (-point.y).acos();
+        let phi = (-point.z).atan2(point.x) + PI;
+        let u = 0.5 * phi / PI;
+        let v = theta / PI;
+
+        (u, v)
+    }
 }
 
 impl Hittable for Sphere {
@@ -87,6 +99,7 @@ impl Hittable for Sphere {
         Some(HitRecord::new(
             ray,
             outward_normal,
+            Self::get_uv(outward_normal),
             root,
             self.material.as_ref(),
         ))

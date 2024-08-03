@@ -48,7 +48,7 @@ impl Material for Lambertian {
             // scattered ray
             Ray::new(record.point, scatter_direction, ray.time),
             // attenuation
-            self.texture.value(record.uv, &record.point),
+            self.texture.value(record.uv, record.point),
         ))
     }
 }

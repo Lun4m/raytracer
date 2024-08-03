@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use crate::{color::Color, vector::Vec3};
+use crate::{color::Color, image::Image, interval::Interval, vector::Vec3};
 
 pub type ArcTexture = Arc<dyn Texture + Send + Sync>;
 
 pub trait Texture {
     // uv are the texture coordinates
-    fn value(&self, uv: (f64, f64), point: &Vec3) -> Color;
+    fn value(&self, uv: (f64, f64), point: Vec3) -> Color;
 }
 
 // annoying orphan rule
@@ -34,7 +34,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn value(&self, _: (f64, f64), _: &Vec3) -> Color {
+    fn value(&self, _: (f64, f64), _: Vec3) -> Color {
         self.albedo
     }
 }
@@ -64,7 +64,7 @@ impl Checker {
 }
 
 impl Texture for Checker {
-    fn value(&self, uv: (f64, f64), point: &Vec3) -> Color {
+    fn value(&self, uv: (f64, f64), point: Vec3) -> Color {
         let x = (self.inv_scale * point.x).floor() as i32;
         let y = (self.inv_scale * point.y).floor() as i32;
         let z = (self.inv_scale * point.z).floor() as i32;
@@ -74,5 +74,36 @@ impl Texture for Checker {
         }
 
         self.odd.value(uv, point)
+    }
+}
+
+pub struct ImageTexture {
+    img: Image,
+}
+
+impl ImageTexture {
+    pub fn new(filename: &str) -> Self {
+        Self {
+            img: Image::new(filename),
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, uv: (f64, f64), _: Vec3) -> Color {
+        if self.img.height <= 0 {
+            return Color::new(0.0, 1.0, 1.0);
+        }
+
+        let u = Interval::new(0.0, 1.0).clamp(uv.0);
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(uv.1);
+
+        let i = (u * self.img.width as f64) as usize;
+        let j = (v * self.img.height as f64) as usize;
+        let pixel = self.img.pixel_data(i, j);
+
+        let color_scale = 1.0 / 255.0;
+
+        color_scale * Color::new(pixel[0].into(), pixel[1].into(), pixel[2].into())
     }
 }

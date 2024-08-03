@@ -6,7 +6,6 @@ use crate::material::Lambertian;
 use crate::sphere::Sphere;
 use crate::texture::Checker;
 use crate::vector::Vec3;
-use crate::volumes::BvhNode;
 use crate::world::World;
 
 pub fn checkered_spheres() {
@@ -41,8 +40,6 @@ pub fn checkered_spheres() {
             Lambertian::new(checker.clone()),
         )),
     ]);
-
-    let world = BvhNode::from_world(world);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")

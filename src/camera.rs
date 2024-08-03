@@ -11,7 +11,6 @@ use crate::{
     random,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
-    volumes::BvhNode,
 };
 
 pub struct CameraConfig {
@@ -116,7 +115,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: BvhNode) -> std::io::Result<()> {
+    pub fn render(&self, world: impl Hittable + Send + Sync) -> std::io::Result<()> {
         let file = File::create("out.ppm")?;
         let mut writer = BufWriter::new(file);
 
@@ -148,7 +147,7 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {
-        let ray_origin = self.center + self.defocus_disk_sample();
+        let ray_origin = self.center + self.defocus_angle * self.defocus_disk_sample();
 
         let pixel_center = self.pixel_00 + (i * self.pixel_delta_u) + (j * self.pixel_delta_v);
         let ray_target = pixel_center + self.pixel_sample_square();
@@ -181,7 +180,7 @@ impl Default for Camera {
 }
 
 // TODO: get rid of recursion?
-pub fn get_color(ray: Ray, world: &BvhNode, depth: i32) -> Color {
+pub fn get_color(ray: Ray, world: &impl Hittable, depth: i32) -> Color {
     if depth <= 0 {
         return Color::default();
     }
