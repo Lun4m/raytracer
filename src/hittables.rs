@@ -1,9 +1,13 @@
+use std::sync::Arc;
+
 use crate::{
     material::Material,
     ray::Ray,
     vector::{dot, Vec3},
     volumes::BoundingBox,
 };
+
+pub type ArcHittable = Arc<dyn Hittable + Send + Sync>;
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray) -> Option<HitRecord>;
@@ -16,6 +20,8 @@ pub trait Hittable {
 pub struct HitRecord<'a> {
     pub distance: f64,
     pub point: Vec3,
+    // Surface coordinates of the ray-object hit point
+    pub uv: (f64, f64),
     pub normal: Vec3,
     pub material: &'a dyn Material,
     pub front_face: bool,
@@ -26,10 +32,12 @@ impl<'a> HitRecord<'a> {
         let point = ray.at(distance);
         let front_face = dot(ray.direction, normal) < 0.0;
         let normal = if front_face { normal } else { -normal };
+        let uv = (0.0, 0.0);
 
         Self {
             distance,
             point,
+            uv,
             normal,
             material,
             front_face,

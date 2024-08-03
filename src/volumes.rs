@@ -3,7 +3,7 @@ use core::panic;
 use std::{cmp::min, ops::Index, sync::Arc};
 
 use crate::{
-    hittables::{HitRecord, Hittable},
+    hittables::{ArcHittable, HitRecord, Hittable},
     interval::Interval,
     ray::Ray,
     vector::Vec3,
@@ -112,13 +112,13 @@ impl Index<usize> for BoundingBox {
 
 // Bounding Volume Hierarhcy
 pub struct BvhNode {
-    left: Arc<dyn Hittable + Send + Sync>,
-    right: Arc<dyn Hittable + Send + Sync>,
+    left: ArcHittable,
+    right: ArcHittable,
     bbox: BoundingBox,
 }
 
 impl BvhNode {
-    pub fn new(objects: &mut [Arc<dyn Hittable + Send + Sync>], start: usize, end: usize) -> Self {
+    pub fn new(objects: &mut [ArcHittable], start: usize, end: usize) -> Self {
         let bbox = objects[start..end]
             .iter()
             .fold(BoundingBox::default(), |bbox, obj| {
@@ -142,10 +142,7 @@ impl BvhNode {
                 let mid = start + span / 2;
                 let left = Arc::new(Self::new(objects, start, mid));
                 let right = Arc::new(Self::new(objects, mid, end));
-                (
-                    left as Arc<dyn Hittable + Send + Sync>,
-                    right as Arc<dyn Hittable + Send + Sync>,
-                )
+                (left as ArcHittable, right as ArcHittable)
             }
         };
 

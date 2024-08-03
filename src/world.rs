@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
-    hittables::{HitRecord, Hittable},
+    hittables::{ArcHittable, HitRecord, Hittable},
     ray::Ray,
     volumes::BoundingBox,
 };
 
 pub struct World {
-    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
+    pub objects: Vec<ArcHittable>,
     bbox: BoundingBox,
 }
 
@@ -19,7 +19,7 @@ impl World {
         }
     }
 
-    pub fn from_vec(objects: Vec<Arc<dyn Hittable + Send + Sync>>) -> Self {
+    pub fn from_vec(objects: Vec<ArcHittable>) -> Self {
         Self {
             objects,
             bbox: BoundingBox::default(),

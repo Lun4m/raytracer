@@ -6,6 +6,7 @@ mod material;
 mod random;
 mod ray;
 mod sphere;
+mod texture;
 mod vector;
 mod volumes;
 mod world;
@@ -16,6 +17,7 @@ use camera::{Camera, CameraConfig};
 use color::Color;
 use material::{Dielectric, Lambertian, Metal};
 use sphere::Sphere;
+use texture::Checker;
 use vector::Vec3;
 use volumes::BvhNode;
 use world::World;
@@ -35,7 +37,8 @@ fn main() {
         focus_dist: 10.0,
     });
 
-    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let checker = Checker::from_colors(0.32, Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
+    let ground_material = Lambertian::new(Arc::new(checker));
     let mut world = World::from_vec(vec![Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -55,7 +58,7 @@ fn main() {
                 // Diffuse
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    let material = Lambertian::new(albedo);
+                    let material = Lambertian::from_albedo(albedo);
                     let new_center = center + Vec3::new(0.0, random::in_interval(0.0, 0.5), 0.0);
                     world.add(Sphere::new_in_motion(center, new_center, 0.2, material));
                     continue;
@@ -84,7 +87,7 @@ fn main() {
     world.add(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        Lambertian::new(Color::new(0.4, 0.2, 0.1)),
+        Lambertian::from_albedo(Color::new(0.4, 0.2, 0.1)),
     ));
     world.add(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
