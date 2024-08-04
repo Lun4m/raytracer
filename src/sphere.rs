@@ -19,18 +19,14 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(
-        center: Vec3,
-        radius: f64,
-        material: impl Material + Send + Sync + 'static,
-    ) -> Sphere {
+    pub fn new(center: Vec3, radius: f64, material: Arc<dyn Material + Send + Sync>) -> Sphere {
         let rvec = Vec3::new(radius, radius, radius);
         let bbox = BoundingBox::from_extrema(center - rvec, center + rvec);
         Sphere {
             center,
             radius,
             direction: None,
-            material: Arc::new(material),
+            material,
             bbox,
         }
     }
@@ -55,7 +51,7 @@ impl Sphere {
         center1: Vec3,
         center2: Vec3,
         radius: f64,
-        material: impl Material + Send + Sync + 'static,
+        material: Arc<dyn Material + Send + Sync>,
     ) -> Self {
         let direction = Some(center2 - center1);
         let rvec = Vec3::new(radius, radius, radius);
@@ -66,7 +62,7 @@ impl Sphere {
             center: center1,
             direction,
             radius,
-            material: Arc::new(material),
+            material,
             bbox,
         }
     }

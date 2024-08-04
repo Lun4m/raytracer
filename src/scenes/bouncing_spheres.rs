@@ -30,8 +30,10 @@ pub fn bouncing_spheres() {
     let mut world = HittableList::from_vec(vec![Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Arc::new(ground_material),
     ))]);
+
+    let dielectric = Arc::new(Dielectric::new(1.5));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -46,7 +48,7 @@ pub fn bouncing_spheres() {
                 // Diffuse
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    let material = Lambertian::from_albedo(albedo);
+                    let material = Arc::new(Lambertian::from_albedo(albedo));
                     let new_center = center + Vec3::new(0.0, random::in_interval(0.0, 0.5), 0.0);
                     world.add(Arc::new(Sphere::new_in_motion(
                         center, new_center, 0.2, material,

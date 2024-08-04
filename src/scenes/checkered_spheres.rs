@@ -26,18 +26,15 @@ pub fn checkered_spheres() {
         Color::new(0.2, 0.3, 0.1),
         Color::new(0.9, 0.9, 0.9),
     ));
+    let material = Arc::new(Lambertian::new(checker));
 
     let world = HittableList::from_vec(vec![
         Arc::new(Sphere::new(
             Vec3::new(0.0, -10.0, 0.0),
             10.0,
-            Lambertian::new(checker.clone()),
+            material.clone(),
         )),
-        Arc::new(Sphere::new(
-            Vec3::new(0.0, 10.0, 0.0),
-            10.0,
-            Lambertian::new(checker.clone()),
-        )),
+        Arc::new(Sphere::new(Vec3::new(0.0, 10.0, 0.0), 10.0, material)),
     ]);
 
     if let Err(e) = camera.render(world) {

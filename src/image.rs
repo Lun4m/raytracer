@@ -8,7 +8,7 @@ use crate::color::Color;
 pub struct Image {
     bytes_per_pixel: usize,
     bytes_per_scanline: usize,
-    // Linear floating point pixel data
+    // Linear floating point pixel data loaded by stb
     fdata: Vec<f32>,
     pub width: i32,
     pub height: i32,

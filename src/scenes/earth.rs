@@ -25,7 +25,7 @@ pub fn earth() {
     let globe = HittableList::from_vec(vec![Arc::new(Sphere::new(
         Vec3::default(),
         2.0,
-        earth_surface,
+        Arc::new(earth_surface),
     ))]);
 
     if let Err(e) = camera.render(globe) {

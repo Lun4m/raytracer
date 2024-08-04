@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env::args, process::exit};
+use std::collections::HashMap;
 
 mod boundind_box;
 mod camera;
@@ -7,6 +7,7 @@ mod hittables;
 mod image;
 mod interval;
 mod material;
+mod perlin;
 mod quad;
 mod random;
 mod ray;
@@ -32,11 +33,11 @@ fn main() {
         scene_names.keys().for_each(|s| println!("    - {s}"));
     };
 
-    let scene = match args().nth(1) {
+    let scene = match env::args().nth(1) {
         Some(v) => v,
         None => {
             usage();
-            exit(0)
+            process::exit(0)
         }
     };
 
