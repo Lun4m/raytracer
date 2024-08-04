@@ -6,8 +6,8 @@ pub fn float() -> f64 {
     random()
 }
 
-pub fn _usize(min: usize, max: usize) -> usize {
-    min + (max + 1 - min) * random::<usize>()
+pub fn usize(min: usize, max: usize) -> usize {
+    thread_rng().gen_range(min..max)
 }
 
 pub fn normal() -> f64 {

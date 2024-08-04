@@ -30,8 +30,10 @@ pub fn bouncing_spheres() {
     let mut world = World::from_vec(vec![Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Arc::new(ground_material),
     ))]);
+
+    let dielectric = Arc::new(Dielectric::new(1.5));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -46,7 +48,7 @@ pub fn bouncing_spheres() {
                 // Diffuse
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    let material = Lambertian::from_albedo(albedo);
+                    let material = Arc::new(Lambertian::from_albedo(albedo));
                     let new_center = center + Vec3::new(0.0, random::in_interval(0.0, 0.5), 0.0);
                     world.add(Sphere::new_in_motion(center, new_center, 0.2, material));
                     continue;
@@ -55,32 +57,27 @@ pub fn bouncing_spheres() {
                 if choose_mat < 0.95 {
                     let albedo = Color::random_min_max(0.5, 1.0);
                     let fuzz = random::in_interval(0.0, 0.5);
-                    let material = Metal::new(albedo, fuzz);
+                    let material = Arc::new(Metal::new(albedo, fuzz));
                     world.add(Sphere::new(center, 0.2, material));
                     continue;
                 }
                 // Dielectric
-                let material = Dielectric::new(1.5);
-                world.add(Sphere::new(center, 0.2, material));
+                world.add(Sphere::new(center, 0.2, dielectric.clone()));
             }
         }
     }
 
     // Bigger spheres
-    world.add(Sphere::new(
-        Vec3::new(0.0, 1.0, 0.0),
-        1.0,
-        Dielectric::new(1.5),
-    ));
+    world.add(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, dielectric));
     world.add(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        Lambertian::from_albedo(Color::new(0.4, 0.2, 0.1)),
+        Arc::new(Lambertian::from_albedo(Color::new(0.4, 0.2, 0.1))),
     ));
     world.add(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
-        Metal::new(Color::new(0.7, 0.6, 0.5), 0.0),
+        Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)),
     ));
 
     let world = BvhNode::from_world(world);

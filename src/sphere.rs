@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
     hittables::{HitRecord, Hittable},
@@ -13,23 +13,19 @@ pub struct Sphere {
     // Point the sphere center is moving towards if in motion
     direction: Option<Vec3>,
     radius: f64,
-    material: Box<dyn Material + Send + Sync>,
+    material: Arc<dyn Material + Send + Sync>,
     bbox: BoundingBox,
 }
 
 impl Sphere {
-    pub fn new(
-        center: Vec3,
-        radius: f64,
-        material: impl Material + Send + Sync + 'static,
-    ) -> Sphere {
+    pub fn new(center: Vec3, radius: f64, material: Arc<dyn Material + Send + Sync>) -> Sphere {
         let rvec = Vec3::new(radius, radius, radius);
         let bbox = BoundingBox::from_extrema(center - rvec, center + rvec);
         Sphere {
             center,
             radius,
             direction: None,
-            material: Box::new(material),
+            material,
             bbox,
         }
     }
@@ -38,7 +34,7 @@ impl Sphere {
         center1: Vec3,
         center2: Vec3,
         radius: f64,
-        material: impl Material + Send + Sync + 'static,
+        material: Arc<dyn Material + Send + Sync>,
     ) -> Self {
         let direction = Some(center2 - center1);
         let rvec = Vec3::new(radius, radius, radius);
@@ -49,7 +45,7 @@ impl Sphere {
             center: center1,
             direction,
             radius,
-            material: Box::new(material),
+            material,
             bbox,
         }
     }
