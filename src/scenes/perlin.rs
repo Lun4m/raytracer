@@ -24,7 +24,7 @@ pub fn perlin_spheres() {
         focus_dist: 10.0,
     });
 
-    let perlin_texture = NoiseTexture::new(10.0);
+    let perlin_texture = NoiseTexture::new(4.0);
     let material = Arc::new(Lambertian::new(Arc::new(perlin_texture)));
 
     let globe = World::from_vec(vec![

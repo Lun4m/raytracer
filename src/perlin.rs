@@ -26,6 +26,10 @@ impl Perlin {
         let u = point.x - (point.x).floor();
         let v = point.y - (point.y).floor();
         let w = point.z - (point.z).floor();
+        // Hermitian smoothing
+        let u = u * u * (3.0 - 2.0 * u);
+        let v = v * v * (3.0 - 2.0 * v);
+        let w = w * w * (3.0 - 2.0 * w);
 
         let i = point.x.floor() as i32;
         let j = point.y.floor() as i32;
