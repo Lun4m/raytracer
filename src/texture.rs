@@ -107,18 +107,21 @@ impl Texture for ImageTexture {
 
 pub struct NoiseTexture {
     noise: Perlin,
+    // resolution parameter
+    scale: f64,
 }
 
 impl NoiseTexture {
-    pub fn new(point_count: Option<usize>) -> Self {
+    pub fn new(scale: f64) -> Self {
         Self {
-            noise: Perlin::new(point_count),
+            noise: Perlin::new(256),
+            scale,
         }
     }
 }
 
 impl Texture for NoiseTexture {
     fn value(&self, _: (f64, f64), point: Vec3) -> Color {
-        Color::white() * self.noise.noise(point)
+        Color::white() * self.noise.noise(self.scale * point)
     }
 }

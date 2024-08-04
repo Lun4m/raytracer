@@ -9,8 +9,7 @@ pub struct Perlin {
 }
 
 impl Perlin {
-    pub fn new(point_count: Option<usize>) -> Self {
-        let point_count = point_count.unwrap_or(256);
+    pub fn new(point_count: usize) -> Self {
         let rand_float = (0..point_count).map(|_| random::float()).collect();
 
         Self {
