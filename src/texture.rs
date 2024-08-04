@@ -118,7 +118,7 @@ impl NoiseTexture {
 }
 
 impl Texture for NoiseTexture {
-    fn value(&self, uv: (f64, f64), point: Vec3) -> Color {
+    fn value(&self, _: (f64, f64), point: Vec3) -> Color {
         Color::white() * self.noise.noise(point)
     }
 }
