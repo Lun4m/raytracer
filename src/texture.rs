@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use rand_distr::num_traits::Float;
+
 use crate::{color::Color, image::Image, interval::Interval, perlin::Perlin, vector::Vec3};
 
 pub type ArcTexture = Arc<dyn Texture + Send + Sync>;
@@ -122,6 +124,7 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _: (f64, f64), point: Vec3) -> Color {
-        Color::white() * self.noise.noise(self.scale * point)
+        0.5 * Color::white()
+            * (1.0 + (self.scale * (point.z + self.noise.turbulence(point, 7))).sin())
     }
 }

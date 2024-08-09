@@ -14,6 +14,7 @@ mod ray;
 mod scenes;
 mod sphere;
 mod texture;
+mod utils;
 mod vector;
 mod volumes;
 
