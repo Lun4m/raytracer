@@ -70,6 +70,13 @@ impl Metal {
         Self { albedo, fuzz }
     }
 
+    pub fn from_rgb(r: f64, g: f64, b: f64, fuzz: f64) -> Self {
+        Self {
+            albedo: Color::new(r, g, b),
+            fuzz,
+        }
+    }
+
     fn reflectance(&self, cos: f64) -> Color {
         // Schlink's approximation for metals
         self.albedo + (Color::white() - self.albedo) * (1.0 - cos).powi(5)

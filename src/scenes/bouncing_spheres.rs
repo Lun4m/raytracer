@@ -1,14 +1,16 @@
 use std::sync::Arc;
 
-use crate::camera::{Camera, CameraConfig};
-use crate::color::Color;
-use crate::material::{Dielectric, Lambertian, Metal};
-use crate::random;
-use crate::sphere::Sphere;
-use crate::texture::Checker;
-use crate::vector::Vec3;
-use crate::volumes::BvhNode;
-use crate::world::World;
+use crate::{
+    camera::{Camera, CameraConfig},
+    color::Color,
+    material::{Dielectric, Lambertian, Metal},
+    random,
+    sphere::Sphere,
+    texture::Checker,
+    vector::Vec3,
+    volumes::BvhNode,
+    world::World,
+};
 
 pub fn bouncing_spheres() {
     // image_width, samples, and max_depth are the big performance hitter
@@ -78,7 +80,7 @@ pub fn bouncing_spheres() {
     world.add(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
-        Metal::new(Color::new(0.7, 0.6, 0.5), 0.0),
+        Metal::from_rgb(0.7, 0.6, 0.5, 0.0),
     ));
 
     let world = BvhNode::from_world(world);

@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
-use crate::camera::{Camera, CameraConfig};
-use crate::color::Color;
-use crate::material::Lambertian;
-use crate::sphere::Sphere;
-use crate::texture::Checker;
-use crate::vector::Vec3;
-use crate::world::World;
+use crate::{
+    camera::{Camera, CameraConfig},
+    color::Color,
+    material::Lambertian,
+    sphere::Sphere,
+    texture::Checker,
+    vector::Vec3,
+    world::World,
+};
 
 pub fn checkered_spheres() {
     let camera = Camera::new(CameraConfig {

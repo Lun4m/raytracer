@@ -46,13 +46,13 @@ pub struct Checker {
 }
 
 impl Checker {
-    pub fn new(scale: f64, even: ArcTexture, odd: ArcTexture) -> Self {
-        Self {
-            inv_scale: 1.0 / scale,
-            even,
-            odd,
-        }
-    }
+    // fn new(scale: f64, even: ArcTexture, odd: ArcTexture) -> Self {
+    //     Self {
+    //         inv_scale: 1.0 / scale,
+    //         even,
+    //         odd,
+    //     }
+    // }
 
     pub fn from_colors(scale: f64, c1: Color, c2: Color) -> Self {
         Self {
