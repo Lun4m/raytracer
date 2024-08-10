@@ -124,7 +124,9 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _: (f64, f64), point: Vec3) -> Color {
-        0.5 * Color::white()
-            * (1.0 + (self.scale * (point.z + self.noise.turbulence(point, 7))).sin())
+        let angle = self.scale * point.z;
+        let phase = 15.0 * self.noise.turbulence(point, 5);
+
+        Color::new(0.5, 0.5, 0.5) * (1.0 + (angle + phase).sin())
     }
 }
