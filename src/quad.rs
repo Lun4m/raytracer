@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     hittables::{HitRecord, Hittable},
     interval::Interval,
@@ -7,6 +9,12 @@ use crate::{
     volumes::BoundingBox,
 };
 
+pub enum Shape {
+    Square,
+    Ellipsis,
+    Triangle,
+}
+
 pub struct Quad {
     origin: Vec3,
     u: Vec3,
@@ -14,13 +22,14 @@ pub struct Quad {
     d: f64,
     w: Vec3,
     normal: Vec3,
-    material: Box<dyn Material + Send + Sync>,
+    material: Arc<dyn Material + Send + Sync>,
     bbox: BoundingBox,
+    shape: Shape,
 }
 
 impl Quad {
     #[rustfmt::skip]
-    pub fn new(origin: Vec3, u: Vec3, v: Vec3, material: impl Material + Send + Sync + 'static) -> Self {
+    pub fn new(origin: Vec3, u: Vec3, v: Vec3, material:Arc<dyn Material + Send + Sync>, shape: Shape) -> Self {
         // Plane formula:
         //   ax + by + cz = d
         //   origin = (x, y, z)
@@ -34,7 +43,7 @@ impl Quad {
         let w = n / n.len_squared();
 
         let bbox = Self::set_bbox(origin, u, v);
-        Self { origin, u, v, d, w, normal, bbox, material: Box::new(material) }
+        Self { origin, u, v, d, w, normal, bbox, material , shape  }
     }
 
     fn set_bbox(o: Vec3, u: Vec3, v: Vec3) -> BoundingBox {
@@ -50,12 +59,22 @@ impl Quad {
         let alpha = dot(self.w, cross(o_to_hp, self.v));
         let beta = dot(self.w, cross(self.u, o_to_hp));
 
-        let unit_interval = Interval::new(0.0, 1.0);
-        if !unit_interval.contains(alpha) || !unit_interval.contains(beta) {
-            return None;
+        let is_inside = match self.shape {
+            Shape::Square => {
+                let unit_interval = Interval::new(0.0, 1.0);
+                unit_interval.contains(alpha) && unit_interval.contains(beta)
+            }
+
+            // Inside the positive u-v plane
+            Shape::Ellipsis => (alpha * alpha + beta * beta).sqrt() < 1.0,
+            Shape::Triangle => alpha > 0.0 && beta > 0.0 && alpha + beta < 1.0,
+        };
+
+        if is_inside {
+            return Some((alpha, beta));
         }
 
-        Some((alpha, beta))
+        None
     }
 }
 
