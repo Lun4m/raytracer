@@ -1,6 +1,6 @@
 use std::f64::INFINITY;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -50,7 +50,7 @@ impl Interval {
     }
 
     // TODO: check that these methods are correct
-    pub fn _contains(&self, x: f64) -> bool {
+    pub fn contains(&self, x: f64) -> bool {
         self.min <= x && self.max >= x
     }
 
@@ -68,9 +68,16 @@ impl Interval {
 
         x
     }
+    pub fn pad(&self, delta: f64) -> Self {
+        if self.span() < delta {
+            return self.expand(delta);
+        }
 
-    pub fn _expand(&self, delta: f64) -> Self {
-        let padding = 0.5 * delta;
+        *self
+    }
+
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta;
         Self::new(self.min - padding, self.max + padding)
     }
 }

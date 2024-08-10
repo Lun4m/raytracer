@@ -31,6 +31,13 @@ impl Lambertian {
             texture: Arc::new(SolidColor::new(albedo)),
         }
     }
+
+    pub fn from_rgb(r: f64, g: f64, b: f64) -> Self {
+        Self {
+            texture: Arc::new(SolidColor::from_rgb(r, g, b)),
+        }
+    }
+
     pub fn new(texture: ArcTexture) -> Self {
         Self { texture }
     }
@@ -63,7 +70,7 @@ impl Metal {
         Self { albedo, fuzz }
     }
 
-    pub fn reflectance(&self, cos: f64) -> Color {
+    fn reflectance(&self, cos: f64) -> Color {
         // Schlink's approximation for metals
         self.albedo + (Color::white() - self.albedo) * (1.0 - cos).powi(5)
     }
@@ -111,11 +118,11 @@ impl Material for Dielectric {
     }
 }
 
-pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * dot(v, n) * n
 }
 
-pub fn reflectance(cos: f64, eta_ratio: f64) -> f64 {
+fn reflectance(cos: f64, eta_ratio: f64) -> f64 {
     // Schlink's approximation
     let r = (1.0 - eta_ratio) / (1.0 + eta_ratio);
     let rsqrd = r * r;
@@ -123,7 +130,7 @@ pub fn reflectance(cos: f64, eta_ratio: f64) -> f64 {
     rsqrd + (1.0 - rsqrd) * (1.0 - cos).powi(5)
 }
 
-pub fn refract(v: Vec3, n: Vec3, eta_ratio: f64) -> Vec3 {
+fn refract(v: Vec3, n: Vec3, eta_ratio: f64) -> Vec3 {
     let cos_theta = (-dot(v, n)).min(1.0);
     let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 

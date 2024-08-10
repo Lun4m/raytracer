@@ -1,5 +1,4 @@
 use core::panic;
-// TODO: this whole module needs to be rewritten in a sane way
 use std::{cmp::min, ops::Index, sync::Arc};
 
 use crate::{
@@ -30,14 +29,20 @@ impl Default for BoundingBox {
 }
 
 impl BoundingBox {
+    const DELTA: f64 = 0.00001;
+
     pub fn _new(x: Interval, y: Interval, z: Interval) -> Self {
-        Self { x, y, z }
+        Self {
+            x: x.pad(Self::DELTA),
+            y: y.pad(Self::DELTA),
+            z: z.pad(Self::DELTA),
+        }
     }
 
     pub fn from_extrema(a: Vec3, b: Vec3) -> Self {
-        let x = Interval::new(a.x.min(b.x), a.x.max(b.x));
-        let y = Interval::new(a.y.min(b.y), a.y.max(b.y));
-        let z = Interval::new(a.z.min(b.z), a.z.max(b.z));
+        let x = Interval::new(a.x.min(b.x), a.x.max(b.x)).pad(Self::DELTA);
+        let y = Interval::new(a.y.min(b.y), a.y.max(b.y)).pad(Self::DELTA);
+        let z = Interval::new(a.z.min(b.z), a.z.max(b.z)).pad(Self::DELTA);
         Self { x, y, z }
     }
 
@@ -47,6 +52,7 @@ impl BoundingBox {
         let z = Interval::from_intervals(&a.z, &b.z);
         Self { x, y, z }
     }
+
     pub fn longest_axis(&self) -> usize {
         if self.x.span() > self.y.span() {
             if self.x.span() > self.z.span() {
@@ -169,8 +175,8 @@ impl Hittable for BvhNode {
 
         match (hit_left, hit_right) {
             (Some(a), Some(b)) => Some(min(a, b)),
-            (None, b) => b,
             (a, None) => a,
+            (None, b) => b,
         }
     }
 

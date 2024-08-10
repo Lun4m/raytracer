@@ -75,7 +75,7 @@ pub fn bouncing_spheres() {
     world.add(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        Lambertian::from_albedo(Color::new(0.4, 0.2, 0.1)),
+        Lambertian::from_rgb(0.4, 0.2, 0.1),
     ));
     world.add(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),

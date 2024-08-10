@@ -6,6 +6,7 @@ mod hittables;
 mod image;
 mod interval;
 mod material;
+mod quad;
 mod random;
 mod ray;
 mod scenes;
@@ -15,7 +16,7 @@ mod vector;
 mod volumes;
 mod world;
 
-const SCENE_NAMES: [&str; 3] = ["bouncing_spheres", "checkered_spheres", "earth"];
+const SCENE_NAMES: [&str; 4] = ["bouncing_spheres", "checkered_spheres", "earth", "quads"];
 
 fn usage() {
     println!("USAGE: raytracer <scene_name>\n\nValid scene names:");
@@ -35,6 +36,7 @@ fn main() {
         "bouncing_spheres" => scenes::bouncing_spheres(),
         "checkered_spheres" => scenes::checkered_spheres(),
         "earth" => scenes::earth(),
+        "quads" => scenes::quads(),
         _ => usage(),
     }
 }

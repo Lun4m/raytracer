@@ -43,7 +43,7 @@ impl Default for CameraConfig {
             max_depth: 10,
             vfov: 90.0,
             look_from: Vec3::default(),
-            look_at: Vec3::new(0.0, 0.0, -1.0),
+            look_at: Vec3::default(),
             up_direction: Vec3::new(0.0, 1.0, 0.0),
             defocus_angle: 0.0,
             focus_dist: 10.0,
