@@ -19,10 +19,8 @@ pub fn bouncing_spheres() {
         max_depth: 10,
         vfov: 20.0,
         look_from: Vec3::new(13.0, 2.0, 3.0),
-        look_at: Vec3::new(0.0, 0.0, 0.0),
-        up_direction: Vec3::new(0.0, 1.0, 0.0),
         defocus_angle: 0.6,
-        focus_dist: 10.0,
+        ..CameraConfig::default()
     });
 
     let checker = Checker::from_colors(0.32, Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
