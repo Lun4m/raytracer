@@ -18,7 +18,7 @@ impl Image {
     pub fn new(filename: &str) -> Self {
         let file_path = match env::var("IMAGE_DIR") {
             Ok(dir) => format!("{dir}/{filename}"),
-            Err(_) => format!("images/{filename}"),
+            Err(_) => format!("textures/{filename}"),
         };
 
         let file = match fs::File::open(&file_path) {
