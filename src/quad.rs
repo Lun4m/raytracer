@@ -39,7 +39,7 @@ impl Quad {
         let d = dot(normal, origin);
 
         // Vector used to check if the ray intersection point
-        // lies inside the quad 
+        // lies inside the quad
         let w = n / n.len_squared();
 
         let bbox = Self::set_bbox(origin, u, v);
@@ -79,7 +79,7 @@ impl Quad {
 }
 
 impl Hittable for Quad {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
         // n dot (r.orig + t * r.dir) = d
         // t = (d - n dot p.orig) / (n dot r.dir)
         let denom = dot(self.normal, ray.direction);
@@ -90,6 +90,10 @@ impl Hittable for Quad {
         }
 
         let root = (self.d - dot(self.normal, ray.origin)) / denom;
+        if !interval.contains(root) {
+            return None;
+        }
+
         let uv = self.get_uv(ray.at(root))?;
 
         Some(HitRecord::new(
@@ -97,7 +101,7 @@ impl Hittable for Quad {
             self.normal,
             uv,
             root,
-            self.material.as_ref(),
+            self.material.clone(),
         ))
     }
 

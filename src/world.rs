@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     hittables::{ArcHittable, HitRecord, Hittable},
+    interval::Interval,
     ray::Ray,
     volumes::BoundingBox,
 };
@@ -33,14 +34,28 @@ impl World {
 }
 
 impl Hittable for World {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
-        // I don't care if this is slower
-        // NOTE: this is completely useless with BVH?
-        // self.objects should be the BVH tree?
-        self.objects
-            .iter()
-            .filter_map(|obj| obj.hit(ray))
-            .min_by(|x, y| x.cmp(y))
+    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
+        let mut record = None;
+
+        for obj in self.objects.iter() {
+            if let Some(r) = obj.hit(ray, interval) {
+                interval.max = r.distance;
+                record = Some(r);
+            }
+        }
+
+        // record
+
+        // self.objects.iter().for_each(|obj| {
+        //     if let Some(r) = obj.hit(ray, interval) {
+        //         interval.max = r.distance;
+        //         record = Some(r);
+        //     }
+        // });
+
+        record
+        // .filter_map(|obj| obj.hit(ray))
+        // .min_by(|x, y| x.cmp(y))
     }
 
     fn bounding_box(&self) -> BoundingBox {

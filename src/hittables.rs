@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use crate::{
-    material::Material,
+    interval::Interval,
+    material::ArcMaterial,
     ray::Ray,
     vector::{dot, Vec3},
     volumes::BoundingBox,
@@ -10,30 +11,31 @@ use crate::{
 pub type ArcHittable = Arc<dyn Hittable + Send + Sync>;
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord>;
+
     // TODO: do we need this?
     fn bounding_box(&self) -> BoundingBox;
 }
 
 /// Struct that keeps track of the hit point, the normal vector at that point,
 /// the material of the hit object
-pub struct HitRecord<'a> {
+pub struct HitRecord {
     pub distance: f64,
     pub point: Vec3,
     // Surface coordinates of the ray-object hit point
     pub uv: (f64, f64),
     pub normal: Vec3,
-    pub material: &'a dyn Material,
+    pub material: ArcMaterial,
     pub front_face: bool,
 }
 
-impl<'a> HitRecord<'a> {
+impl HitRecord {
     pub fn new(
         ray: &Ray,
         normal: Vec3,
         uv: (f64, f64),
         distance: f64,
-        material: &'a dyn Material,
+        material: ArcMaterial,
     ) -> Self {
         let point = ray.at(distance);
         let front_face = dot(ray.direction, normal) < 0.0;
@@ -50,21 +52,21 @@ impl<'a> HitRecord<'a> {
     }
 }
 
-impl PartialEq for HitRecord<'_> {
+impl PartialEq for HitRecord {
     fn eq(&self, other: &Self) -> bool {
         self.distance == other.distance
     }
 }
 
-impl Eq for HitRecord<'_> {}
+impl Eq for HitRecord {}
 
-impl PartialOrd for HitRecord<'_> {
+impl PartialOrd for HitRecord {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for HitRecord<'_> {
+impl Ord for HitRecord {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.distance
             .partial_cmp(&other.distance)

@@ -8,11 +8,13 @@ use rayon::prelude::*;
 use crate::{
     color::{color_to_string, Color},
     hittables::Hittable,
+    interval::Interval,
     random,
     ray::Ray,
     vector::{cross, unit_vector, Vec3},
 };
 
+#[derive(Debug)]
 pub struct CameraConfig {
     pub aspect_ratio: f64,
     pub image_width: i32,
@@ -54,6 +56,7 @@ impl Default for CameraConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct Camera {
     image_width: i32,
     image_height: i32,
@@ -183,7 +186,7 @@ impl Camera {
             return Color::BLACK;
         }
 
-        let Some(hit_obj) = world.hit(&ray) else {
+        let Some(hit_obj) = world.hit(&ray, &mut Interval::positive()) else {
             return self.background;
         };
 

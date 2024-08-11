@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env::args, process::exit};
+use std::{env::args, process::exit};
 
 mod camera;
 mod color;
@@ -16,12 +16,13 @@ mod vector;
 mod volumes;
 mod world;
 
-const SCENE_NAMES: [&str; 5] = [
+const SCENE_NAMES: [&str; 6] = [
     "bouncing_spheres",
     "checkered_spheres",
     "earth",
     "quads",
     "light",
+    "cornell_box",
 ];
 
 fn usage() {
@@ -44,6 +45,7 @@ fn main() {
         "earth" => scenes::earth(),
         "quads" => scenes::quads(),
         "light" => scenes::light(),
+        "cornell_box" => scenes::cornell_box(),
         _ => usage(),
     }
 }

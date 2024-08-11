@@ -11,10 +11,13 @@ use crate::{
 
 pub trait Material {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
+
     fn emit(&self, uv: (f64, f64), point: Vec3) -> Color {
         Color::BLACK
     }
 }
+
+pub type ArcMaterial = Arc<dyn Material + Send + Sync>;
 
 pub struct Lambertian {
     texture: ArcTexture,
@@ -151,7 +154,7 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, _: &Ray, _: &HitRecord) -> Option<(Ray, Color)> {
         None
     }
 
@@ -188,6 +191,5 @@ fn refract(v: Vec3, n: Vec3, eta_ratio: f64) -> Vec3 {
     let r_out_perp = eta_ratio * (v + cos_theta * n);
     let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
 
-    // TODO: worth implementing ops_*_mut() methods?
     r_out_perp + r_out_parallel
 }

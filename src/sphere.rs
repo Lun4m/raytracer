@@ -2,6 +2,7 @@ use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
     hittables::{HitRecord, Hittable},
+    interval::Interval,
     material::Material,
     ray::Ray,
     vector::{dot, Vec3, EPS},
@@ -86,7 +87,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
         let center = self.sphere_center(ray.time);
 
         let oc = center - ray.origin;
@@ -103,9 +104,9 @@ impl Hittable for Sphere {
         let mut root = (half_b - dsqrt) / a;
 
         // filter out negative values
-        if root <= EPS {
+        if !interval.surrounds(root) {
             root = (half_b + dsqrt) / a;
-            if root <= EPS {
+            if !interval.surrounds(root) {
                 return None;
             }
         }
@@ -117,7 +118,7 @@ impl Hittable for Sphere {
             outward_normal,
             Self::get_uv(outward_normal),
             root,
-            self.material.as_ref(),
+            self.material.clone(),
         ))
     }
 

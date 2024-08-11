@@ -1,5 +1,5 @@
 use core::panic;
-use std::{cmp::min, ops::Index, sync::Arc};
+use std::{ops::Index, sync::Arc};
 
 use crate::{
     hittables::{ArcHittable, HitRecord, Hittable},
@@ -67,10 +67,7 @@ impl BoundingBox {
         2
     }
 
-    pub fn hit(&self, ray: &Ray) -> bool {
-        // TODO: can this be simplified?
-        let mut ray_t = Interval::positive();
-
+    pub fn hit(&self, ray: &Ray, mut ray_t: Interval) -> bool {
         for axis in 0..3 {
             let ax = &self[axis];
             let adinv = 1.0 / ray.direction[axis];
@@ -162,22 +159,23 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, ray: &Ray) -> Option<HitRecord> {
-        if !self.bbox.hit(ray) {
+    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
+        if !self.bbox.hit(ray, *interval) {
             return None;
         }
 
-        // TODO: these need the interval so
-        // boxes down the tree can filter out
-        // rays that do not intersect?
-        let hit_left = self.left.hit(ray);
-        let hit_right = self.right.hit(ray);
+        let mut record = None;
+        if let Some(left_obj) = self.left.hit(ray, interval) {
+            interval.max = left_obj.distance;
+            record = Some(left_obj);
+        };
 
-        match (hit_left, hit_right) {
-            (Some(a), Some(b)) => Some(min(a, b)),
-            (a, None) => a,
-            (None, b) => b,
-        }
+        if let Some(right_obj) = self.right.hit(ray, interval) {
+            record = Some(right_obj);
+            // interval.max = right_obj.distance;
+        };
+
+        record
     }
 
     fn bounding_box(&self) -> BoundingBox {
