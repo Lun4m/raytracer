@@ -35,6 +35,11 @@ pub fn light() {
             red.clone(),
         )),
         Arc::new(Sphere::with_arc(Vec3::new(0.0, 2.0, 0.0), 2.0, red)),
+        Arc::new(Sphere::with_arc(
+            Vec3::new(0.0, 7.0, 0.0),
+            2.0,
+            diff_light.clone(),
+        )),
         Arc::new(Quad::new(
             Vec3::new(3.0, 1.0, -2.0),
             Vec3::new(2.0, 0.0, 0.0),
