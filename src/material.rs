@@ -11,6 +11,9 @@ use crate::{
 
 pub trait Material {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
+    fn emit(&self, uv: (f64, f64), point: Vec3) -> Color {
+        Color::BLACK
+    }
 }
 
 pub struct Lambertian {
@@ -79,7 +82,7 @@ impl Metal {
 
     fn reflectance(&self, cos: f64) -> Color {
         // Schlink's approximation for metals
-        self.albedo + (Color::white() - self.albedo) * (1.0 - cos).powi(5)
+        self.albedo + (Color::WHITE - self.albedo) * (1.0 - cos).powi(5)
     }
 }
 
@@ -120,8 +123,40 @@ impl Material for Dielectric {
         let unit_direction = unit_vector(ray.direction);
         let out_direction = refract(unit_direction, record.normal, eta_ratio);
 
-        let attenuation = Color::white();
+        let attenuation = Color::WHITE;
         Some((Ray::new(record.point, out_direction, ray.time), attenuation))
+    }
+}
+
+pub struct DiffuseLight {
+    texture: ArcTexture,
+}
+
+impl DiffuseLight {
+    pub fn new(texture: ArcTexture) -> Self {
+        Self { texture }
+    }
+
+    pub fn from_rgb(r: f64, g: f64, b: f64) -> Self {
+        Self {
+            texture: Arc::new(SolidColor::from_rgb(r, g, b)),
+        }
+    }
+
+    pub fn from_color(albedo: Color) -> Self {
+        Self {
+            texture: Arc::new(SolidColor::new(albedo)),
+        }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
+        None
+    }
+
+    fn emit(&self, uv: (f64, f64), point: Vec3) -> Color {
+        self.texture.value(uv, point)
     }
 }
 

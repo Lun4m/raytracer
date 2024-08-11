@@ -3,9 +3,16 @@ use crate::{interval::Interval, vector::Vec3};
 pub type Color = Vec3;
 
 impl Color {
-    pub fn white() -> Color {
-        Color::new(1.0, 1.0, 1.0)
-    }
+    pub const BLACK: Color = Color {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    pub const WHITE: Color = Color {
+        x: 1.0,
+        y: 1.0,
+        z: 1.0,
+    };
 
     pub fn from_f32_slice(slice: &[f32]) -> Self {
         Self::new(slice[0].into(), slice[1].into(), slice[2].into())

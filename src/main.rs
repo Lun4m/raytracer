@@ -1,4 +1,4 @@
-use std::{env::args, process::exit};
+use std::{collections::HashMap, env::args, process::exit};
 
 mod camera;
 mod color;
@@ -16,7 +16,13 @@ mod vector;
 mod volumes;
 mod world;
 
-const SCENE_NAMES: [&str; 4] = ["bouncing_spheres", "checkered_spheres", "earth", "quads"];
+const SCENE_NAMES: [&str; 5] = [
+    "bouncing_spheres",
+    "checkered_spheres",
+    "earth",
+    "quads",
+    "light",
+];
 
 fn usage() {
     println!("USAGE: raytracer <scene_name>\n\nValid scene names:");
@@ -37,6 +43,7 @@ fn main() {
         "checkered_spheres" => scenes::checkered_spheres(),
         "earth" => scenes::earth(),
         "quads" => scenes::quads(),
+        "light" => scenes::light(),
         _ => usage(),
     }
 }

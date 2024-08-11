@@ -32,6 +32,8 @@ pub struct CameraConfig {
     pub defocus_angle: f64,
     /// Distance from `look_from` to plane of perfect focus
     pub focus_dist: f64,
+    /// Scene background color
+    pub background: Color,
 }
 
 impl Default for CameraConfig {
@@ -47,6 +49,7 @@ impl Default for CameraConfig {
             up_direction: Vec3::new(0.0, 1.0, 0.0),
             defocus_angle: 0.0,
             focus_dist: 10.0,
+            background: Color::new(0.7, 0.8, 1.0),
         }
     }
 }
@@ -63,6 +66,7 @@ pub struct Camera {
     defocus_angle: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
+    background: Color,
 }
 
 impl Camera {
@@ -105,6 +109,7 @@ impl Camera {
             samples: config.samples,
             max_depth: config.max_depth,
             defocus_angle: config.defocus_angle,
+            background: config.background,
             image_height,
             center,
             pixel_00,
@@ -131,7 +136,7 @@ impl Camera {
                 .map(|i| {
                     let pixel_color = (0..self.samples)
                         // .into_par_iter()
-                        .map(|_| get_color(self.get_ray(i, j), &world, self.max_depth))
+                        .map(|_| self.get_color(self.get_ray(i, j), &world, self.max_depth))
                         .sum();
 
                     color_to_string(pixel_color, self.samples)
@@ -171,31 +176,31 @@ impl Camera {
         let py = -0.5 + random::float();
         (px * self.pixel_delta_u) + (py * self.pixel_delta_v)
     }
+
+    // TODO: get rid of recursion?
+    fn get_color(&self, ray: Ray, world: &impl Hittable, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::BLACK;
+        }
+
+        let Some(hit_obj) = world.hit(&ray) else {
+            return self.background;
+        };
+
+        let color_from_emission = hit_obj.material.emit(hit_obj.uv, hit_obj.point);
+        match hit_obj.material.scatter(&ray, &hit_obj) {
+            Some((ray_scattered, attenuation)) => {
+                let color_from_scatter =
+                    attenuation * self.get_color(ray_scattered, world, depth - 1);
+                color_from_emission + color_from_scatter
+            }
+            None => color_from_emission,
+        }
+    }
 }
 
 impl Default for Camera {
     fn default() -> Self {
         Self::new(CameraConfig::default())
     }
-}
-
-// TODO: get rid of recursion?
-pub fn get_color(ray: Ray, world: &impl Hittable, depth: i32) -> Color {
-    if depth <= 0 {
-        return Color::default();
-    }
-
-    if let Some(hit_obj) = world.hit(&ray) {
-        return match hit_obj.material.scatter(&ray, &hit_obj) {
-            Some((ray_scattered, attenuation)) => {
-                attenuation * get_color(ray_scattered, world, depth - 1)
-            }
-            None => Color::default(),
-        };
-    }
-
-    // Sky box
-    let unit_direction = unit_vector(ray.direction);
-    let percent = 0.5 * (unit_direction.y + 1.0);
-    (1.0 - percent) * Color::white() + percent * Color::new(0.5, 0.7, 1.0)
 }
