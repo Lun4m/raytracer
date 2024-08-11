@@ -7,7 +7,6 @@ use crate::{
     quad::{Quad, Shape},
     sphere::Sphere,
     vector::Vec3,
-    volumes::BvhNode,
     world::World,
 };
 
@@ -25,7 +24,6 @@ pub fn light() {
     });
 
     let red = Arc::new(Lambertian::from_rgb(1.0, 0.2, 0.2));
-    // TODO: 4, 4, 4 ???
     let diff_light = Arc::new(DiffuseLight::from_rgb(4.0, 4.0, 4.0));
 
     let world = World::from_vec(vec![
@@ -48,8 +46,6 @@ pub fn light() {
             Shape::Square,
         )),
     ]);
-
-    let world = BvhNode::from_world(world);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")

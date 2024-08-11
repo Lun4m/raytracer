@@ -11,7 +11,7 @@ use crate::{
 pub type ArcHittable = Arc<dyn Hittable + Send + Sync>;
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord>;
 
     // TODO: do we need this?
     fn bounding_box(&self) -> BoundingBox;

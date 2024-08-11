@@ -159,8 +159,8 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
-        if !self.bbox.hit(ray, *interval) {
+    fn hit(&self, ray: &Ray, mut interval: Interval) -> Option<HitRecord> {
+        if !self.bbox.hit(ray, interval) {
             return None;
         }
 
@@ -171,8 +171,8 @@ impl Hittable for BvhNode {
         };
 
         if let Some(right_obj) = self.right.hit(ray, interval) {
+            interval.max = right_obj.distance;
             record = Some(right_obj);
-            // interval.max = right_obj.distance;
         };
 
         record

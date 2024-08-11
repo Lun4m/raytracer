@@ -186,7 +186,7 @@ impl Camera {
             return Color::BLACK;
         }
 
-        let Some(hit_obj) = world.hit(&ray, &mut Interval::positive()) else {
+        let Some(hit_obj) = world.hit(&ray, Interval::positive()) else {
             return self.background;
         };
 

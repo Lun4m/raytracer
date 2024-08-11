@@ -87,7 +87,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
         let center = self.sphere_center(ray.time);
 
         let oc = center - ray.origin;

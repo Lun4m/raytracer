@@ -34,7 +34,7 @@ impl World {
 }
 
 impl Hittable for World {
-    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, mut interval: Interval) -> Option<HitRecord> {
         let mut record = None;
 
         for obj in self.objects.iter() {

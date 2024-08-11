@@ -79,7 +79,7 @@ impl Quad {
 }
 
 impl Hittable for Quad {
-    fn hit(&self, ray: &Ray, interval: &mut Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
         // n dot (r.orig + t * r.dir) = d
         // t = (d - n dot p.orig) / (n dot r.dir)
         let denom = dot(self.normal, ray.direction);

@@ -5,9 +5,7 @@ use crate::{
     color::Color,
     material::{DiffuseLight, Lambertian},
     quad::{Quad, Shape},
-    sphere::Sphere,
     vector::Vec3,
-    volumes::BvhNode,
     world::World,
 };
 
@@ -32,10 +30,12 @@ pub fn cornell_box() {
     // (000) top right corner
     let world = World::from_vec(vec![
         // light
-        Arc::new(Sphere::with_arc(
-            Vec3::new(355.0, 255.0, 255.0),
-            50.0,
-            light.clone(),
+        Arc::new(Quad::new(
+            Vec3::new(343.0, 554.0, 332.0),
+            Vec3::new(-130.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, -105.0),
+            light,
+            Shape::Square,
         )),
         // left
         Arc::new(Quad::new(
@@ -78,8 +78,6 @@ pub fn cornell_box() {
             Shape::Square,
         )),
     ]);
-
-    let world = BvhNode::from_world(world);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")
