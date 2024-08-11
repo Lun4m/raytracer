@@ -1,4 +1,4 @@
-use std::{env::args, process::exit};
+use std::{collections::HashMap, env::args, process::exit};
 
 mod camera;
 mod color;
@@ -16,21 +16,21 @@ mod vector;
 mod volumes;
 mod world;
 
-const SCENE_NAMES: [&str; 6] = [
-    "bouncing_spheres",
-    "checkered_spheres",
-    "earth",
-    "quads",
-    "light",
-    "cornell_box",
-];
-
-fn usage() {
-    println!("USAGE: raytracer <scene_name>\n\nValid scene names:");
-    SCENE_NAMES.iter().for_each(|s| println!("    - {s}"));
-}
-
 fn main() {
+    let scene_names = HashMap::from([
+        ("bouncing_spheres", scenes::bouncing_spheres as fn()),
+        ("checkered_spheres", scenes::checkered_spheres as fn()),
+        ("earth", scenes::earth as fn()),
+        ("quads", scenes::quads as fn()),
+        ("light", scenes::light as fn()),
+        ("cornell_box", scenes::cornell_box as fn()),
+    ]);
+
+    let usage = || {
+        println!("USAGE: raytracer <scene_name>\n\nValid scene names:");
+        scene_names.keys().for_each(|s| println!("    - {s}"));
+    };
+
     let scene = match args().nth(1) {
         Some(v) => v,
         None => {
@@ -39,13 +39,5 @@ fn main() {
         }
     };
 
-    match scene.as_str() {
-        "bouncing_spheres" => scenes::bouncing_spheres(),
-        "checkered_spheres" => scenes::checkered_spheres(),
-        "earth" => scenes::earth(),
-        "quads" => scenes::quads(),
-        "light" => scenes::light(),
-        "cornell_box" => scenes::cornell_box(),
-        _ => usage(),
-    }
+    scene_names.get(scene.as_str()).map_or_else(usage, |f| f())
 }
