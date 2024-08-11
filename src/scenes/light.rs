@@ -3,11 +3,11 @@ use std::sync::Arc;
 use crate::{
     camera::{Camera, CameraConfig},
     color::Color,
+    hittables::HittableList,
     material::{DiffuseLight, Lambertian},
     quad::{Quad, Shape},
     sphere::Sphere,
     vector::Vec3,
-    world::World,
 };
 
 pub fn light() {
@@ -26,7 +26,7 @@ pub fn light() {
     let red = Arc::new(Lambertian::from_rgb(1.0, 0.2, 0.2));
     let diff_light = Arc::new(DiffuseLight::from_rgb(4.0, 4.0, 4.0));
 
-    let world = World::from_vec(vec![
+    let world = HittableList::from_vec(vec![
         Arc::new(Sphere::with_arc(
             Vec3::new(0.0, -1000.0, 0.0),
             1000.0,

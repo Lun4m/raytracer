@@ -3,13 +3,13 @@ use std::sync::Arc;
 use crate::{
     camera::{Camera, CameraConfig},
     color::Color,
+    hittables::HittableList,
     material::{Dielectric, Lambertian, Metal},
     random,
     sphere::Sphere,
     texture::Checker,
     vector::Vec3,
     volumes::BvhNode,
-    world::World,
 };
 
 pub fn bouncing_spheres() {
@@ -27,7 +27,7 @@ pub fn bouncing_spheres() {
 
     let checker = Checker::from_colors(0.32, Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
     let ground_material = Lambertian::new(Arc::new(checker));
-    let mut world = World::from_vec(vec![Arc::new(Sphere::new(
+    let mut world = HittableList::from_vec(vec![Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
         ground_material,
@@ -83,7 +83,7 @@ pub fn bouncing_spheres() {
         Metal::from_rgb(0.7, 0.6, 0.5, 0.0),
     ));
 
-    let world = BvhNode::from_world(world);
+    let world = BvhNode::from(world);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")

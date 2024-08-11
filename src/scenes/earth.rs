@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use crate::{
     camera::{Camera, CameraConfig},
+    hittables::HittableList,
     material::Lambertian,
     sphere::Sphere,
     texture::ImageTexture,
     vector::Vec3,
-    world::World,
 };
 
 pub fn earth() {
@@ -22,7 +22,7 @@ pub fn earth() {
 
     let earth_texture = ImageTexture::new("earthmap.jpg");
     let earth_surface = Lambertian::new(Arc::new(earth_texture));
-    let globe = World::from_vec(vec![Arc::new(Sphere::new(
+    let globe = HittableList::from_vec(vec![Arc::new(Sphere::new(
         Vec3::default(),
         2.0,
         earth_surface,

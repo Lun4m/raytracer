@@ -17,6 +17,51 @@ pub trait Hittable {
     fn bounding_box(&self) -> BoundingBox;
 }
 
+pub struct HittableList {
+    pub objects: Vec<ArcHittable>,
+    bbox: BoundingBox,
+}
+
+impl HittableList {
+    pub fn new() -> Self {
+        HittableList {
+            objects: Vec::new(),
+            bbox: BoundingBox::default(),
+        }
+    }
+
+    pub fn from_vec(objects: Vec<ArcHittable>) -> Self {
+        Self {
+            objects,
+            bbox: BoundingBox::default(),
+        }
+    }
+
+    pub fn add(&mut self, obj: impl Hittable + Send + Sync + 'static) {
+        self.bbox = BoundingBox::from_boxes(self.bbox.clone(), obj.bounding_box());
+        self.objects.push(Arc::new(obj));
+    }
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, ray: &Ray, mut interval: Interval) -> Option<HitRecord> {
+        let mut record = None;
+
+        for obj in self.objects.iter() {
+            if let Some(r) = obj.hit(ray, interval) {
+                interval.max = r.distance;
+                record = Some(r);
+            }
+        }
+
+        record
+    }
+
+    fn bounding_box(&self) -> BoundingBox {
+        todo!()
+    }
+}
+
 /// Struct that keeps track of the hit point, the normal vector at that point,
 /// the material of the hit object
 pub struct HitRecord {

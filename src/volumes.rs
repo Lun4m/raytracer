@@ -2,11 +2,10 @@ use core::panic;
 use std::{ops::Index, sync::Arc};
 
 use crate::{
-    hittables::{ArcHittable, HitRecord, Hittable},
+    hittables::{ArcHittable, HitRecord, Hittable, HittableList},
     interval::Interval,
     ray::Ray,
     vector::Vec3,
-    world::World,
 };
 
 // Axis Aligned Bounding Box
@@ -151,10 +150,12 @@ impl BvhNode {
 
         Self { left, right, bbox }
     }
+}
 
-    pub fn from_world(mut world: World) -> Self {
-        let len = world.objects.len();
-        Self::new(&mut world.objects, 0, len)
+impl From<HittableList> for BvhNode {
+    fn from(mut value: HittableList) -> Self {
+        let len = value.objects.len();
+        Self::new(&mut value.objects, 0, len)
     }
 }
 

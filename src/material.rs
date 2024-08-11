@@ -12,6 +12,7 @@ use crate::{
 pub trait Material {
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
 
+    #[allow(unused_variables)]
     fn emit(&self, uv: (f64, f64), point: Vec3) -> Color {
         Color::BLACK
     }

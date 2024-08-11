@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    hittables::{HitRecord, Hittable},
+    hittables::{ArcHittable, HitRecord, Hittable, HittableList},
     interval::Interval,
-    material::Material,
+    material::{ArcMaterial, Material},
     ray::Ray,
     vector::{cross, dot, unit_vector, Vec3, EPS},
     volumes::BoundingBox,
@@ -108,4 +108,68 @@ impl Hittable for Quad {
     fn bounding_box(&self) -> BoundingBox {
         self.bbox.clone()
     }
+}
+
+pub fn create_box(a: Vec3, b: Vec3, material: ArcMaterial) -> ArcHittable {
+    // Opposite vertices at min and max coords
+    let min = Vec3::new(a.x.min(b.x), a.y.min(b.y), a.z.min(b.z));
+    let max = Vec3::new(a.x.max(b.x), a.y.max(b.y), a.z.max(b.z));
+
+    // Side lenghts
+    let dx = Vec3::new(max.x - min.x, 0.0, 0.0);
+    let dy = Vec3::new(0.0, max.y - min.y, 0.0);
+    let dz = Vec3::new(0.0, 0.0, max.z - min.z);
+
+    let sides = HittableList::from_vec(vec![
+        // front
+        Arc::new(Quad::new(
+            Vec3::new(min.x, min.y, max.z),
+            dx,
+            dy,
+            material.clone(),
+            Shape::Square,
+        )),
+        // right
+        Arc::new(Quad::new(
+            Vec3::new(max.x, min.y, max.z),
+            -dz,
+            dy,
+            material.clone(),
+            Shape::Square,
+        )),
+        // back
+        Arc::new(Quad::new(
+            Vec3::new(max.x, min.y, min.z),
+            -dx,
+            dy,
+            material.clone(),
+            Shape::Square,
+        )),
+        // left
+        Arc::new(Quad::new(
+            Vec3::new(min.x, min.y, min.z),
+            dz,
+            dy,
+            material.clone(),
+            Shape::Square,
+        )),
+        // top
+        Arc::new(Quad::new(
+            Vec3::new(min.x, max.y, max.z),
+            dx,
+            -dz,
+            material.clone(),
+            Shape::Square,
+        )),
+        // bottom
+        Arc::new(Quad::new(
+            Vec3::new(min.x, min.y, min.z),
+            dx,
+            dz,
+            material,
+            Shape::Square,
+        )),
+    ]);
+
+    Arc::new(sides)
 }

@@ -14,7 +14,6 @@ mod sphere;
 mod texture;
 mod vector;
 mod volumes;
-mod world;
 
 fn main() {
     let scene_names = HashMap::from([

@@ -3,11 +3,11 @@ use std::sync::Arc;
 use crate::{
     camera::{Camera, CameraConfig},
     color::Color,
+    hittables::HittableList,
     material::Lambertian,
     sphere::Sphere,
     texture::Checker,
     vector::Vec3,
-    world::World,
 };
 
 pub fn checkered_spheres() {
@@ -27,7 +27,7 @@ pub fn checkered_spheres() {
         Color::new(0.9, 0.9, 0.9),
     ));
 
-    let world = World::from_vec(vec![
+    let world = HittableList::from_vec(vec![
         Arc::new(Sphere::new(
             Vec3::new(0.0, -10.0, 0.0),
             10.0,

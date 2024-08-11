@@ -5,7 +5,7 @@ use crate::{
     interval::Interval,
     material::Material,
     ray::Ray,
-    vector::{dot, Vec3, EPS},
+    vector::{dot, Vec3},
     volumes::BoundingBox,
 };
 

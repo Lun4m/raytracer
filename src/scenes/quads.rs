@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use crate::{
     camera::{Camera, CameraConfig},
+    hittables::HittableList,
     material::Lambertian,
     quad::{Quad, Shape},
     vector::Vec3,
     volumes::BvhNode,
-    world::World,
 };
 
 pub fn quads() {
@@ -26,7 +26,7 @@ pub fn quads() {
     let upper_orange = Arc::new(Lambertian::from_rgb(1.0, 0.5, 0.0));
     let lower_teal = Arc::new(Lambertian::from_rgb(0.2, 0.8, 0.8));
 
-    let world = World::from_vec(vec![
+    let world = HittableList::from_vec(vec![
         Arc::new(Quad::new(
             Vec3::new(-3.0, -2.0, 5.0),
             Vec3::new(0.0, 0.0, -4.0),
@@ -87,7 +87,7 @@ pub fn quads() {
         )),
     ]);
 
-    let world = BvhNode::from_world(world);
+    let world = BvhNode::from(world);
 
     if let Err(e) = camera.render(world) {
         eprintln!("Failed while rendering with error: {e}")
