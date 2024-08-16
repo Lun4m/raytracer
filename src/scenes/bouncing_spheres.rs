@@ -59,13 +59,13 @@ pub fn bouncing_spheres() {
                 if choose_mat < 0.95 {
                     let albedo = Color::random_min_max(0.5, 1.0);
                     let fuzz = random::in_interval(0.0, 0.5);
-                    let material = Metal::new(albedo, fuzz);
+                    let material = Arc::new(Metal::new(albedo, fuzz));
                     world.add(Arc::new(Sphere::new(center, 0.2, material)));
                     continue;
                 }
+
                 // Dielectric
-                let material = Dielectric::new(1.5);
-                world.add(Arc::new(Sphere::new(center, 0.2, material)));
+                world.add(Arc::new(Sphere::new(center, 0.2, dielectric.clone())));
             }
         }
     }
@@ -74,17 +74,17 @@ pub fn bouncing_spheres() {
     world.add(Arc::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
-        Dielectric::new(1.5),
+        dielectric,
     )));
     world.add(Arc::new(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        Lambertian::from_rgb(0.4, 0.2, 0.1),
+        Arc::new(Lambertian::from_rgb(0.4, 0.2, 0.1)),
     )));
     world.add(Arc::new(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
-        Metal::from_rgb(0.7, 0.6, 0.5, 0.0),
+        Arc::new(Metal::from_rgb((0.7, 0.6, 0.5), 0.0)),
     )));
 
     let world = BvhNode::from(world);

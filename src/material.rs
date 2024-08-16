@@ -77,9 +77,9 @@ impl Metal {
         Self { albedo, fuzz }
     }
 
-    pub fn from_rgb(r: f64, g: f64, b: f64, fuzz: f64) -> Self {
+    pub fn from_rgb(rgb: (f64, f64, f64), fuzz: f64) -> Self {
         Self {
-            albedo: Color::new(r, g, b),
+            albedo: Color::new(rgb.0, rgb.1, rgb.2),
             fuzz,
         }
     }

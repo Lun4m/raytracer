@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, env, process};
 
 mod boundind_box;
 mod camera;
@@ -25,6 +25,7 @@ fn main() {
         ("earth", scenes::earth as fn()),
         ("quads", scenes::quads as fn()),
         ("light", scenes::light as fn()),
+        ("perlin", scenes::perlin_spheres as fn()),
         ("cornell_box", scenes::cornell_box as fn()),
         ("cornell_smoke", scenes::cornell_smoke as fn()),
     ]);
