@@ -14,6 +14,7 @@ mod scenes;
 mod sphere;
 mod texture;
 mod vector;
+mod volumes;
 
 fn main() {
     let scene_names = HashMap::from([
@@ -23,6 +24,7 @@ fn main() {
         ("quads", scenes::quads as fn()),
         ("light", scenes::light as fn()),
         ("cornell_box", scenes::cornell_box as fn()),
+        ("cornell_smoke", scenes::cornell_smoke as fn()),
     ]);
 
     let usage = || {

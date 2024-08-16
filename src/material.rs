@@ -164,6 +164,36 @@ impl Material for DiffuseLight {
     }
 }
 
+pub struct Isotropic {
+    texture: ArcTexture,
+}
+
+impl Isotropic {
+    pub fn new(texture: ArcTexture) -> Self {
+        Self { texture }
+    }
+    pub fn from_rgb(r: f64, g: f64, b: f64) -> Self {
+        Self {
+            texture: Arc::new(SolidColor::from_rgb(r, g, b)),
+        }
+    }
+
+    pub fn from_color(albedo: Color) -> Self {
+        Self {
+            texture: Arc::new(SolidColor::new(albedo)),
+        }
+    }
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
+        Some((
+            Ray::new(record.point, Vec3::random_in_unit_sphere(), ray.time),
+            self.texture.value(record.uv, record.point),
+        ))
+    }
+}
+
 fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * dot(v, n) * n
 }

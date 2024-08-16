@@ -31,6 +31,10 @@ impl Interval {
         }
     }
 
+    pub fn with_min(min: f64) -> Self {
+        Interval { min, max: INFINITY }
+    }
+
     pub fn positive() -> Self {
         Interval {
             min: 0.001,
