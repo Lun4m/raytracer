@@ -1,4 +1,4 @@
-use std::ops::{self, Index};
+use std::ops::{self, Index, IndexMut};
 
 use crate::random;
 
@@ -84,9 +84,17 @@ impl Vec3 {
         (self.x.abs() < EPS) && (self.x.abs() < EPS) && (self.x.abs() < EPS)
     }
 
-    // fn add<T>(&mut self, rhs: T) {
-    //     self + T;
-    // }
+    fn dot(&self, other: Self) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    fn cross(&self, other: Self) -> Self {
+        Self {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
 }
 
 impl Index<usize> for Vec3 {
@@ -97,6 +105,17 @@ impl Index<usize> for Vec3 {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
+            _ => panic!("Cannot index above 2"),
+        }
+    }
+}
+
+impl IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
             _ => panic!("Cannot index above 2"),
         }
     }

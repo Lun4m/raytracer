@@ -1,5 +1,5 @@
 use core::panic;
-use std::{ops::Index, sync::Arc};
+use std::{ops, sync::Arc};
 
 use crate::{
     hittables::{ArcHittable, HitRecord, Hittable, HittableList},
@@ -11,9 +11,9 @@ use crate::{
 // Axis Aligned Bounding Box
 #[derive(Clone, Debug)]
 pub struct BoundingBox {
-    x: Interval,
-    y: Interval,
-    z: Interval,
+    pub x: Interval,
+    pub y: Interval,
+    pub z: Interval,
 }
 
 impl Default for BoundingBox {
@@ -46,9 +46,9 @@ impl BoundingBox {
     }
 
     pub fn from_boxes(a: Self, b: Self) -> Self {
-        let x = Interval::from_intervals(&a.x, &b.x);
-        let y = Interval::from_intervals(&a.y, &b.y);
-        let z = Interval::from_intervals(&a.z, &b.z);
+        let x = Interval::from_intervals(a.x, b.x).pad(Self::DELTA);
+        let y = Interval::from_intervals(a.y, b.y).pad(Self::DELTA);
+        let z = Interval::from_intervals(a.z, b.z).pad(Self::DELTA);
         Self { x, y, z }
     }
 
@@ -99,7 +99,7 @@ impl BoundingBox {
     }
 }
 
-impl Index<usize> for BoundingBox {
+impl ops::Index<usize> for BoundingBox {
     type Output = Interval;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -112,10 +112,26 @@ impl Index<usize> for BoundingBox {
     }
 }
 
+impl ops::Add<Vec3> for BoundingBox {
+    type Output = BoundingBox;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        BoundingBox::_new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl ops::Add<BoundingBox> for Vec3 {
+    type Output = BoundingBox;
+
+    fn add(self, rhs: BoundingBox) -> Self::Output {
+        BoundingBox::_new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
 // Bounding Volume Hierarhcy
 pub struct BvhNode {
     left: ArcHittable,
-    right: ArcHittable,
+    right: Option<ArcHittable>,
     bbox: BoundingBox,
 }
 
@@ -131,12 +147,12 @@ impl BvhNode {
         let span = end - start;
 
         let (left, right) = match span {
-            1 => (objects[start].clone(), objects[start].clone()),
-            2 => (objects[start].clone(), objects[start + 1].clone()),
+            1 => (objects[start].clone(), None),
+            2 => (objects[start].clone(), Some(objects[start + 1].clone())),
             _ => {
                 objects[start..end].sort_by(|a, b| {
-                    let a_interval = &a.bounding_box()[axis];
-                    let b_interval = &b.bounding_box()[axis];
+                    let a_interval = a.bounding_box()[axis];
+                    let b_interval = b.bounding_box()[axis];
 
                     a_interval.min.partial_cmp(&b_interval.min).unwrap()
                 });
@@ -144,7 +160,7 @@ impl BvhNode {
                 let mid = start + span / 2;
                 let left = Arc::new(Self::new(objects, start, mid));
                 let right = Arc::new(Self::new(objects, mid, end));
-                (left as ArcHittable, right as ArcHittable)
+                (left as ArcHittable, Some(right as ArcHittable))
             }
         };
 
@@ -171,10 +187,11 @@ impl Hittable for BvhNode {
             record = Some(left_obj);
         };
 
-        if let Some(right_obj) = self.right.hit(ray, interval) {
-            interval.max = right_obj.distance;
-            record = Some(right_obj);
-        };
+        if let Some(node) = &self.right {
+            if let Some(right_obj) = node.hit(ray, interval) {
+                record = Some(right_obj);
+            };
+        }
 
         record
     }

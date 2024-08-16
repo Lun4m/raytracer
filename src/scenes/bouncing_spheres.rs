@@ -48,7 +48,9 @@ pub fn bouncing_spheres() {
                     let albedo = Color::random() * Color::random();
                     let material = Lambertian::from_albedo(albedo);
                     let new_center = center + Vec3::new(0.0, random::in_interval(0.0, 0.5), 0.0);
-                    world.add(Sphere::new_in_motion(center, new_center, 0.2, material));
+                    world.add(Arc::new(Sphere::new_in_motion(
+                        center, new_center, 0.2, material,
+                    )));
                     continue;
                 }
                 // Metal
@@ -56,32 +58,32 @@ pub fn bouncing_spheres() {
                     let albedo = Color::random_min_max(0.5, 1.0);
                     let fuzz = random::in_interval(0.0, 0.5);
                     let material = Metal::new(albedo, fuzz);
-                    world.add(Sphere::new(center, 0.2, material));
+                    world.add(Arc::new(Sphere::new(center, 0.2, material)));
                     continue;
                 }
                 // Dielectric
                 let material = Dielectric::new(1.5);
-                world.add(Sphere::new(center, 0.2, material));
+                world.add(Arc::new(Sphere::new(center, 0.2, material)));
             }
         }
     }
 
     // Bigger spheres
-    world.add(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
         Dielectric::new(1.5),
-    ));
-    world.add(Sphere::new(
+    )));
+    world.add(Arc::new(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
         Lambertian::from_rgb(0.4, 0.2, 0.1),
-    ));
-    world.add(Sphere::new(
+    )));
+    world.add(Arc::new(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
         Metal::from_rgb(0.7, 0.6, 0.5, 0.0),
-    ));
+    )));
 
     let world = BvhNode::from(world);
 

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{
     camera::{Camera, CameraConfig},
     color::Color,
-    hittables::HittableList,
+    hittables::{HittableList, RotateY, Translate},
     material::{DiffuseLight, Lambertian},
     quad::{create_box, Quad, Shape},
     vector::Vec3,
@@ -24,12 +24,12 @@ pub fn cornell_box() {
     });
 
     let red = Arc::new(Lambertian::from_rgb(0.65, 0.05, 0.05));
-    let white = Arc::new(Lambertian::from_rgb(0.93, 0.93, 0.93));
+    let white = Arc::new(Lambertian::from_rgb(0.73, 0.73, 0.73));
     let green = Arc::new(Lambertian::from_rgb(0.12, 0.45, 0.15));
     let light = Arc::new(DiffuseLight::from_rgb(15.0, 15.0, 15.0));
 
     // (000) top right corner
-    let world = HittableList::from_vec(vec![
+    let mut world = HittableList::from_vec(vec![
         // light
         Arc::new(Quad::new(
             Vec3::new(343.0, 554.0, 332.0),
@@ -78,18 +78,26 @@ pub fn cornell_box() {
             white.clone(),
             Shape::Square,
         )),
-        // boxes
-        create_box(
-            Vec3::new(130.0, 0.0, 65.0),
-            Vec3::new(295., 165., 230.),
-            white.clone(),
-        ),
-        create_box(
-            Vec3::new(265.0, 0.0, 295.0),
-            Vec3::new(430., 330., 460.),
-            white.clone(),
-        ),
     ]);
+
+    // boxes
+    let box1 = create_box(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165., 330., 165.),
+        white.clone(),
+    );
+    let box1 = Arc::new(RotateY::new(box1, 15.0));
+    let box1 = Arc::new(Translate::new(box1, Vec3::new(256., 0.0, 295.)));
+    world.add(box1);
+
+    let box2 = create_box(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165., 165., 165.),
+        white.clone(),
+    );
+    let box2 = Arc::new(RotateY::new(box2, -18.0));
+    let box2 = Arc::new(Translate::new(box2, Vec3::new(130., 0.0, 65.)));
+    world.add(box2);
 
     let world = BvhNode::from(world);
 

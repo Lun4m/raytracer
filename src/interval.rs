@@ -1,4 +1,4 @@
-use std::f64::INFINITY;
+use std::{f64::INFINITY, ops};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Interval {
@@ -11,7 +11,7 @@ impl Interval {
         Interval { min, max }
     }
 
-    pub fn from_intervals(a: &Interval, b: &Interval) -> Self {
+    pub fn from_intervals(a: Interval, b: Interval) -> Self {
         let min = a.min.min(b.min);
         let max = a.max.max(b.max);
         Self { min, max }
@@ -79,5 +79,21 @@ impl Interval {
     pub fn expand(&self, delta: f64) -> Self {
         let padding = 0.5 * delta;
         Self::new(self.min - padding, self.max + padding)
+    }
+}
+
+impl ops::Add<f64> for Interval {
+    type Output = Interval;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Interval::new(self.min + rhs, self.max + rhs)
+    }
+}
+
+impl ops::Add<Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, rhs: Interval) -> Self::Output {
+        rhs + self
     }
 }
