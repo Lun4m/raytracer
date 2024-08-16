@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use crate::{
+    boundind_box::BoundingBox,
     hittables::{ArcHittable, HitRecord, Hittable, HittableList},
     interval::Interval,
     material::{ArcMaterial, Material},
     ray::Ray,
     vector::{cross, dot, unit_vector, Vec3, EPS},
-    volumes::BoundingBox,
 };
 
 pub enum Shape {

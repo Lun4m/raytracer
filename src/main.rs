@@ -1,5 +1,6 @@
 use std::{collections::HashMap, env::args, process::exit};
 
+mod boundind_box;
 mod camera;
 mod color;
 mod hittables;
@@ -13,7 +14,6 @@ mod scenes;
 mod sphere;
 mod texture;
 mod vector;
-mod volumes;
 
 fn main() {
     let scene_names = HashMap::from([

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
+    boundind_box::BvhNode,
     camera::{Camera, CameraConfig},
     color::Color,
     hittables::HittableList,
@@ -9,7 +10,6 @@ use crate::{
     sphere::Sphere,
     texture::Checker,
     vector::Vec3,
-    volumes::BvhNode,
 };
 
 pub fn bouncing_spheres() {

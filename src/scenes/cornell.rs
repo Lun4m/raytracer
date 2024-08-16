@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
+    boundind_box::BvhNode,
     camera::{Camera, CameraConfig},
     color::Color,
     hittables::{HittableList, RotateY, Translate},
     material::{DiffuseLight, Lambertian},
     quad::{create_box, Quad, Shape},
     vector::Vec3,
-    volumes::BvhNode,
 };
 
 pub fn cornell_box() {

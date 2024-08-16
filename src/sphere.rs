@@ -1,12 +1,12 @@
 use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
+    boundind_box::BoundingBox,
     hittables::{HitRecord, Hittable},
     interval::Interval,
     material::Material,
     ray::Ray,
     vector::{dot, Vec3},
-    volumes::BoundingBox,
 };
 
 pub struct Sphere {

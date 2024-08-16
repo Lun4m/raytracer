@@ -1,11 +1,11 @@
 use std::{f64::INFINITY, sync::Arc};
 
 use crate::{
+    boundind_box::BoundingBox,
     interval::Interval,
     material::ArcMaterial,
     ray::Ray,
     vector::{dot, Vec3},
-    volumes::BoundingBox,
 };
 
 pub type ArcHittable = Arc<dyn Hittable + Send + Sync>;

@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use crate::{
+    boundind_box::BvhNode,
     camera::{Camera, CameraConfig},
     hittables::HittableList,
     material::Lambertian,
     quad::{Quad, Shape},
     vector::Vec3,
-    volumes::BvhNode,
 };
 
 pub fn quads() {
