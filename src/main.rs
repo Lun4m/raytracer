@@ -28,6 +28,7 @@ fn main() {
         ("perlin", scenes::perlin_spheres as fn()),
         ("cornell_box", scenes::cornell_box as fn()),
         ("cornell_smoke", scenes::cornell_smoke as fn()),
+        ("the_week_after", scenes::the_week_after as fn()),
     ]);
 
     let usage = || {
