@@ -1,0 +1,11 @@
+[package]
+name = "raytracer-cpu"
+version.workspace = true
+edition.workspace = true
+# resolver.workspace = true
+
+[dependencies]
+rand = "0.8.5"
+rand_distr = "0.4.3"
+rayon = "1.10.0"
+stb = { version = "0.3.2", default-features = false , features = ["stb_image"]}

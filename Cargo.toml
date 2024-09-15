@@ -1,12 +1,17 @@
-[package]
-name = "raytracer"
+[workspace]
+members = [
+    "raytracer-cpu",
+    "raytracer-gpu"
+]
+resolver = "2"
+
+[workspace.package]
+# name = "raytracer"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-rand = "0.8.5"
-rand_distr = "0.4.3"
-rayon = "1.10.0"
-stb = { version = "0.3.2", default-features = false , features = ["stb_image"]}
+# [workspace.dependencies]
+# rand = "0.8.5"
+# rand_distr = "0.4.3"
+# rayon = "1.10.0"
+# stb = { version = "0.3.2", default-features = false , features = ["stb_image"]}

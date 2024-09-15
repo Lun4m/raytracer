@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use rand_distr::num_traits::Float;
-
 use crate::{color::Color, image::Image, interval::Interval, perlin::Perlin, vector::Vec3};
 
 pub type ArcTexture = Arc<dyn Texture + Send + Sync>;

@@ -32,7 +32,7 @@ fn main() {
     ]);
 
     let usage = || {
-        println!("USAGE: raytracer <scene_name>\n\nValid scene names:");
+        println!("USAGE: raytracer-cpu <scene_name>\n\nValid scene names:");
         scene_names.keys().for_each(|s| println!("    - {s}"));
     };
 

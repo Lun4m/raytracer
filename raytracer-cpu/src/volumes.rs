@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use rand_distr::num_traits::Float;
-
 use crate::{
     boundind_box::BoundingBox,
     color::Color,
@@ -21,7 +19,7 @@ pub struct ConstantMedium {
 }
 
 impl ConstantMedium {
-    pub fn new(boundary: ArcHittable, density: f64, texture: ArcTexture) -> Self {
+    pub fn _new(boundary: ArcHittable, density: f64, texture: ArcTexture) -> Self {
         let neg_inv_density = -1.0 / density;
         let phase_function = Arc::new(Isotropic::new(texture));
         Self {

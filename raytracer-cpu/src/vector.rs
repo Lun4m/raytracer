@@ -100,11 +100,11 @@ impl Vec3 {
         (self.x.abs() < EPS) && (self.x.abs() < EPS) && (self.x.abs() < EPS)
     }
 
-    fn dot(&self, other: Self) -> f64 {
+    fn _dot(&self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
-    fn cross(&self, other: Self) -> Self {
+    fn _cross(&self, other: Self) -> Self {
         Self {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,

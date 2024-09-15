@@ -137,7 +137,7 @@ pub struct DiffuseLight {
 }
 
 impl DiffuseLight {
-    pub fn new(texture: ArcTexture) -> Self {
+    pub fn _new(texture: ArcTexture) -> Self {
         Self { texture }
     }
 
@@ -147,7 +147,7 @@ impl DiffuseLight {
         }
     }
 
-    pub fn from_color(albedo: Color) -> Self {
+    pub fn _from_color(albedo: Color) -> Self {
         Self {
             texture: Arc::new(SolidColor::new(albedo)),
         }
@@ -172,7 +172,7 @@ impl Isotropic {
     pub fn new(texture: ArcTexture) -> Self {
         Self { texture }
     }
-    pub fn from_rgb(r: f64, g: f64, b: f64) -> Self {
+    pub fn _from_rgb(r: f64, g: f64, b: f64) -> Self {
         Self {
             texture: Arc::new(SolidColor::from_rgb(r, g, b)),
         }
