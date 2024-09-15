@@ -1,9 +1,9 @@
 .PHONY: run-gpu run-cpu
 
 run-gpu:
-	cargo run --release -p raytracer-gpu
-	# -- ${scene}
-	# open out.ppm
+	@cargo run --release -p raytracer-gpu
+	@# -- ${scene}
+	@# open out.ppm
 
 run-cpu:
 	cargo run --release -p raytracer-cpu -- ${scene}

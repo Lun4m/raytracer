@@ -74,7 +74,7 @@ async fn main() -> Result<()> {
     let window = event_loop.create_window(window_attrs)?;
 
     let (device, queue, surface) = connect_to_gpu(&window).await?;
-    let renderer = render::PathTracer::new(device, queue);
+    let renderer = render::PathTracer::new(device, queue, WIDTH, HEIGHT);
 
     // TODO: replace with non deprecated code we the mantainers update the docs
     event_loop.run(|event, control_handle| {
