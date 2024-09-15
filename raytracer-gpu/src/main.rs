@@ -87,7 +87,11 @@ async fn main() -> Result<()> {
                         .get_current_texture()
                         .expect("should be able to get current texture");
 
-                    // TODO: draw frame
+                    let render_target = frame
+                        .texture
+                        .create_view(&wgpu::TextureViewDescriptor::default());
+
+                    renderer.render_frame(&render_target);
 
                     frame.present();
                     window.request_redraw();
