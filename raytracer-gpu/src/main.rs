@@ -7,6 +7,8 @@ use {
     },
 };
 
+mod render;
+
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
 
@@ -72,7 +74,7 @@ async fn main() -> Result<()> {
     let window = event_loop.create_window(window_attrs)?;
 
     let (device, queue, surface) = connect_to_gpu(&window).await?;
-    // TODO: initialize renderer
+    let renderer = render::PathTracer::new(device, queue);
 
     // TODO: replace with non deprecated code we the mantainers update the docs
     event_loop.run(|event, control_handle| {
