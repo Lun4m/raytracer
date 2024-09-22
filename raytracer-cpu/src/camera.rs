@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{stdout, BufWriter, Write},
+    io::{BufWriter, Write},
 };
 
 use rayon::prelude::*;
@@ -128,11 +128,12 @@ impl Camera {
         let mut writer = BufWriter::new(file);
 
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height);
-        writer.write_all(header.as_bytes())?;
+        let _ = writer.write(header.as_bytes())?;
 
+        let mut stdout = std::io::stdout();
         for j in 0..self.image_height {
             print!("\rScanlines remaining: {:>3}", self.image_height - j);
-            stdout().flush()?;
+            stdout.flush()?;
 
             (0..self.image_width)
                 .into_par_iter()
@@ -147,7 +148,11 @@ impl Camera {
                 .collect::<Vec<String>>()
                 .into_iter()
                 // TODO: fix this unwrap?
-                .for_each(|color| writer.write_all(color.as_bytes()).unwrap());
+                .for_each(|color| {
+                    let _ = writer.write(color.as_bytes()).unwrap();
+                });
+
+            writer.flush()?;
         }
 
         println!("\rDone!                   ");
