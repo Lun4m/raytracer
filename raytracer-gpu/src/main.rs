@@ -1,7 +1,9 @@
 use {
     anyhow::{Context, Result},
+    std::sync::Arc,
     winit::{
-        event::{Event, WindowEvent},
+        application::ApplicationHandler,
+        event::WindowEvent,
         event_loop::{ControlFlow, EventLoop},
         window::Window,
     },
@@ -12,14 +14,16 @@ mod render;
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
 
-async fn connect_to_gpu(window: &Window) -> Result<(wgpu::Device, wgpu::Queue, wgpu::Surface)> {
+async fn connect_to_gpu<'a>(
+    window: Arc<Window>,
+) -> Result<(wgpu::Device, wgpu::Queue, wgpu::Surface<'a>)> {
     use wgpu::TextureFormat::{Bgra8Unorm, Rgba8Unorm};
 
     // Create wgpu API entry point
     let instance = wgpu::Instance::default();
 
     // Create a drawable surface, associated with the window
-    let surface = instance.create_surface(window)?;
+    let surface = instance.create_surface(window.clone())?;
 
     // Request GPU
     let adapter = instance
@@ -61,45 +65,68 @@ async fn connect_to_gpu(window: &Window) -> Result<(wgpu::Device, wgpu::Queue, w
     Ok((device, queue, surface))
 }
 
+#[derive(Default)]
+struct App<'a> {
+    window: Option<Arc<Window>>,
+    surface: Option<wgpu::Surface<'a>>,
+    renderer: Option<render::PathTracer>,
+}
+
+impl<'a> ApplicationHandler for App<'a> {
+    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let window_size = winit::dpi::PhysicalSize::new(WIDTH, HEIGHT);
+        let window_attrs = Window::default_attributes()
+            .with_inner_size(window_size)
+            .with_resizable(false)
+            .with_title("GPU Path Tracer".to_string());
+
+        let window = Arc::new(event_loop.create_window(window_attrs).unwrap());
+        self.window = Some(window.clone());
+
+        let (device, queue, surface) = pollster::block_on(connect_to_gpu(window)).unwrap();
+        let renderer = render::PathTracer::new(device, queue, WIDTH, HEIGHT);
+
+        self.surface = Some(surface);
+        self.renderer = Some(renderer);
+    }
+
+    fn window_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        _window_id: winit::window::WindowId,
+        event: WindowEvent,
+    ) {
+        match event {
+            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::RedrawRequested => {
+                let frame: wgpu::SurfaceTexture = self
+                    .surface
+                    .as_mut()
+                    .unwrap()
+                    .get_current_texture()
+                    .expect("should be able to get current texture");
+
+                let render_target = frame
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+
+                self.renderer.as_mut().unwrap().render_frame(&render_target);
+
+                frame.present();
+                self.window.as_ref().unwrap().request_redraw();
+            }
+            _ => (),
+        }
+    }
+}
+
 #[pollster::main]
 async fn main() -> Result<()> {
     let event_loop = EventLoop::new()?;
-    let window_size = winit::dpi::PhysicalSize::new(WIDTH, HEIGHT);
-    let window_attrs = Window::default_attributes()
-        .with_inner_size(window_size)
-        .with_resizable(false)
-        .with_title("GPU Path Tracer".to_string());
+    event_loop.set_control_flow(ControlFlow::Poll);
 
-    // TODO: replace with non deprecated code we the mantainers update the docs
-    let window = event_loop.create_window(window_attrs)?;
-
-    let (device, queue, surface) = connect_to_gpu(&window).await?;
-    let renderer = render::PathTracer::new(device, queue, WIDTH, HEIGHT);
-
-    // TODO: replace with non deprecated code we the mantainers update the docs
-    event_loop.run(|event, control_handle| {
-        control_handle.set_control_flow(ControlFlow::Poll);
-        if let Event::WindowEvent { event, .. } = event {
-            match event {
-                WindowEvent::CloseRequested => control_handle.exit(),
-                WindowEvent::RedrawRequested => {
-                    let frame: wgpu::SurfaceTexture = surface
-                        .get_current_texture()
-                        .expect("should be able to get current texture");
-
-                    let render_target = frame
-                        .texture
-                        .create_view(&wgpu::TextureViewDescriptor::default());
-
-                    renderer.render_frame(&render_target);
-
-                    frame.present();
-                    window.request_redraw();
-                }
-                _ => (),
-            }
-        }
-    })?;
+    let mut app = App::default();
+    event_loop.run_app(&mut app)?;
 
     Ok(())
 }

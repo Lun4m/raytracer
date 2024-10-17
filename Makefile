@@ -5,6 +5,7 @@ run-gpu:
 	@# -- ${scene}
 	@# open out.ppm
 
+# make run-cpu scene=scene_name
 run-cpu:
 	cargo run --release -p raytracer-cpu -- ${scene}
 	@open out.ppm
