@@ -5,6 +5,7 @@ use {
         application::ApplicationHandler,
         event::WindowEvent,
         event_loop::{ControlFlow, EventLoop},
+        keyboard::Key,
         window::Window,
     },
 };
@@ -114,6 +115,11 @@ impl<'a> ApplicationHandler for App<'a> {
 
                 frame.present();
                 self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                if let Key::Named(winit::keyboard::NamedKey::Escape) = event.logical_key {
+                    event_loop.exit()
+                }
             }
             _ => (),
         }
