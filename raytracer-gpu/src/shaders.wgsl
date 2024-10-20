@@ -18,18 +18,35 @@ struct Uniforms {
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
+// The surface of a sphere can be described as
+//     (X - C)·(X - C) = r²
+// where `X` is a point on the sphere surface, `C` the sphere center,
+// and `r` the radius.
 struct Sphere {
     center: vec3f,
     radius: f32,
 }
 
+
+// Substituting the ray equation inside the sphere equation we get
+//     (P + tD - C)·(P + tD - C) = r²
+// We need to solve for `t`:
+//     V = P - C
+//     (tD + V)·(tD + V) = r²
+//     (D·D)t² + 2(V·D)t + (V·V) - r² = 0
+// This is a second order equation with
+//     a = (D·D), b = 2(V·D), c = (V·V) - r²
+//
 fn intersect_sphere(ray: Ray, sphere: Sphere) -> f32 {
     let v = ray.origin - sphere.center;
     let a = dot(ray.direction, ray.direction);
     let b = dot(v, ray.direction);
     let c = dot(v, v) - sphere.radius * sphere.radius;
 
+    // Calculate discriminant
     let d = b * b - a * c;
+
+    // Check if equation has solutions
     if d < 0.0 {
         return -1.0;
     }
@@ -38,13 +55,19 @@ fn intersect_sphere(ray: Ray, sphere: Sphere) -> f32 {
     let a_inv = 1.0 / a;
     let b_neg = -b;
 
+    // Calculate closest point
     let t = (b_neg - d_sqrt) * a_inv;
+
+    // Check if closest point is behind ray origin
     if t < 0.0 {
         return t;
     }
     return (b_neg + d_sqrt) * a_inv;
 }
 
+// Our ray can be described as a simple line
+//     Y = P + tD
+// where P is the ray origin and D the ray direction.
 struct Ray {
     origin: vec3f,
     direction: vec3f,
