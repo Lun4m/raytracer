@@ -25,6 +25,7 @@ var<private> vertices: TriangleVertices = TriangleVertices(
 struct Uniforms {
     width: u32,
     height: u32,
+    frame_count: u32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -123,7 +124,11 @@ fn sky_color(ray: Ray) -> vec3f {
 
     var closest_hit = Intersection(vec3f(), FLT_MAX);
     for (var i = 0u; i < OBJECT_COUNT; i += 1u) {
-        let hit = intersect_sphere(ray, scene[i]);
+
+        var sphere = scene[i];
+        sphere.radius += sin(f32(uniforms.frame_count) * 0.02) * 0.2;
+
+        let hit = intersect_sphere(ray, sphere);
         if hit.t > 0.0 && hit.t < closest_hit.t {
             closest_hit = hit;
         }

@@ -1,5 +1,23 @@
 use bytemuck::{Pod, Zeroable};
 
+#[derive(Clone, Copy, Pod, Zeroable, Debug)]
+#[repr(C)]
+struct Uniforms {
+    width: u32,
+    height: u32,
+    frame_count: u32,
+}
+
+impl Uniforms {
+    fn new(width: u32, height: u32) -> Self {
+        Self {
+            width,
+            height,
+            frame_count: 0,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct PathTracer {
     device: wgpu::Device,
@@ -10,13 +28,6 @@ pub struct PathTracer {
     display_bind_group: wgpu::BindGroup,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable, Debug)]
-#[repr(C)]
-struct Uniforms {
-    width: u32,
-    height: u32,
-}
-
 impl PathTracer {
     pub fn new(device: wgpu::Device, queue: wgpu::Queue, width: u32, height: u32) -> Self {
         device.on_uncaptured_error(Box::new(|error| panic!("Aborting due to error: {}", error)));
@@ -24,18 +35,13 @@ impl PathTracer {
         let shader_module = compile_shader_module(&device);
         let (display_pipeline, display_layout) = create_display_pipeline(&device, &shader_module);
 
-        let uniforms = Uniforms { width, height };
+        let uniforms = Uniforms::new(width, height);
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("uniforms"),
             size: std::mem::size_of::<Uniforms>() as u64,
-            usage: wgpu::BufferUsages::UNIFORM,
-            mapped_at_creation: true,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
         });
-        uniform_buffer
-            .slice(..)
-            .get_mapped_range_mut()
-            .copy_from_slice(bytemuck::bytes_of(&uniforms));
-        uniform_buffer.unmap();
 
         let display_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("bind group"),
@@ -60,7 +66,11 @@ impl PathTracer {
         }
     }
 
-    pub fn render_frame(&self, target: &wgpu::TextureView) {
+    pub fn render_frame(&mut self, target: &wgpu::TextureView) {
+        self.uniforms.frame_count += 1;
+        self.queue
+            .write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(&self.uniforms));
+
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
