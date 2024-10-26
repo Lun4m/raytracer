@@ -27,7 +27,10 @@ struct Uniforms {
     height: u32,
     frame_count: u32,
 }
+
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(1) var radiance_samples_old: texture_2d<f32>;
+@group(0) @binding(2) var radiance_samples_new: texture_storage_2d<rgba32float, write>;
 
 // A ray can be described as a simple line
 //     Y = P + tD
@@ -133,11 +136,27 @@ fn sky_color(ray: Ray) -> vec3f {
             closest_hit = hit;
         }
     }
+    var radiance_sample: vec3f;
 
     if closest_hit.t < FLT_MAX {
         // Color according to normal (shifting range from [0, 1] to [-1, 1])
-        return vec4f(0.5 * closest_hit.normal + vec3f(0.5), 1.0);
+        radiance_sample = vec3f(0.5 * closest_hit.normal + vec3f(0.5));
+    } else {
+        radiance_sample = sky_color(ray);
     }
 
-    return vec4f(sky_color(ray), 1.0);
+    // Fetch old sum of radiance sample
+    var old_sum: vec3f;
+    if uniforms.frame_count > 1 {
+        old_sum = textureLoad(radiance_samples_old, vec2u(pos.xy), 0).xyz;
+    } else {
+        old_sum = vec3f();
+    }
+
+    // Compute and store new sum of radiance sample
+    let new_sum = radiance_sample + old_sum;
+    textureStore(radiance_samples_new, vec2u(pos.xy), vec4f(new_sum, 0.0));
+
+    // Display average
+    return vec4f(new_sum / f32(uniforms.frame_count), 1.0);
 }
