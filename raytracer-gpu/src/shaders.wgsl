@@ -117,8 +117,13 @@ fn sky_color(ray: Ray) -> vec3f {
     let focus_distance = 1.;
     let aspect_ratio = f32(uniforms.width) / f32(uniforms.height);
 
-    // Normalize viewport coords
-    var uv = pos.xy / vec2f(f32(uniforms.width - 1u), f32(uniforms.height - 1u));
+    // Offset and normalize viewport coords
+    let offset = vec2f(
+        f32(uniforms.frame_count % 4) * 0.25 - 0.5,
+        f32((uniforms.frame_count % 16) / 4) * 0.25 - 0.5,
+    );
+    var uv = (pos.xy + offset) / vec2f(f32(uniforms.width - 1u), f32(uniforms.height - 1u));
+
     // Map uv from normalized viewport coords (y-down) to camera coords
     uv = (2.0 * uv - vec2f(1.0)) * vec2f(aspect_ratio, -1.0);
 
@@ -127,17 +132,15 @@ fn sky_color(ray: Ray) -> vec3f {
 
     var closest_hit = Intersection(vec3f(), FLT_MAX);
     for (var i = 0u; i < OBJECT_COUNT; i += 1u) {
-
-        var sphere = scene[i];
-        sphere.radius += sin(f32(uniforms.frame_count) * 0.02) * 0.2;
+        let sphere = scene[i];
 
         let hit = intersect_sphere(ray, sphere);
         if hit.t > 0.0 && hit.t < closest_hit.t {
             closest_hit = hit;
         }
     }
-    var radiance_sample: vec3f;
 
+    var radiance_sample: vec3f;
     if closest_hit.t < FLT_MAX {
         // Color according to normal (shifting range from [0, 1] to [-1, 1])
         radiance_sample = vec3f(0.5 * closest_hit.normal + vec3f(0.5));
