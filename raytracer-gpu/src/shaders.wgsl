@@ -1,6 +1,8 @@
 const FLT_MAX: f32 = 3.40282346638528859812e+38;
-
+const MAX_PATH_LENGTH: u32 = 6;
 const OBJECT_COUNT: u32 = 2;
+const EPSILON: f32 = 1e-3;
+
 alias Scene = array<Sphere, OBJECT_COUNT>;
 var<private> scene: Scene = Scene(
     Sphere( /*center*/ vec3(0.0, 0.0, -1.0), /*radius*/ 0.5),
@@ -90,6 +92,18 @@ fn point_on_ray(ray: Ray, t: f32) -> vec3f {
     return ray.origin + t * ray.direction;
 }
 
+struct Scatter {
+    attenuation: vec3f,
+    ray: Ray,
+}
+
+fn scatter(input_ray: Ray, hit: Intersection) -> Scatter {
+    let reflected = reflect(input_ray.direction, hit.normal);
+    let output_ray = Ray(point_on_ray(input_ray, hit.t), reflected);
+    let attenuation = vec3(0.4);
+    return Scatter(attenuation, output_ray);
+}
+
 // The surface of a sphere can be described as
 //     (X - C)·(X - C) = r²
 // where `X` is a point on the sphere surface, `C` the sphere center,
@@ -144,10 +158,10 @@ fn intersect_sphere(ray: Ray, sphere: Sphere) -> Intersection {
     // Calculate closest point
     let t1 = (b_neg - d_sqrt) * a_inv;
     let t2 = (b_neg + d_sqrt) * a_inv;
-    let t = select(t2, t1, t1 > 0);
+    let t = select(t2, t1, t1 > EPSILON);
 
     // Check if closest point is behind ray origin
-    if t <= 0.0 {
+    if t <= EPSILON {
         return no_intersection();
     }
 
@@ -192,15 +206,23 @@ fn sky_color(ray: Ray) -> vec3f {
     uv = (2.0 * uv - vec2f(1.0)) * vec2f(aspect_ratio, -1.0);
 
     let direction = vec3f(uv, -focus_distance);
-    let ray = Ray(origin, direction);
-    let hit = intersect_scene(ray);
+    var ray = Ray(origin, direction);
+    var throughput = vec3(1.0);
+    var radiance_sample = vec3f();
 
-    var radiance_sample: vec3f;
-    if is_intersection_valid(hit) {
-        // Color according to normal (shifting range from [0, 1] to [-1, 1])
-        radiance_sample = vec3f(0.5 * hit.normal + vec3f(0.5));
-    } else {
-        radiance_sample = sky_color(ray);
+    var path_lenght = 0u;
+    while path_lenght < MAX_PATH_LENGTH {
+        let hit = intersect_scene(ray);
+        if !is_intersection_valid(hit) {
+            // If no intersection return sky color
+            radiance_sample += throughput * sky_color(ray);
+            break;
+        }
+
+        let scattered = scatter(ray, hit);
+        throughput *= scattered.attenuation;
+        ray = scattered.ray;
+        path_lenght += 1u;
     }
 
     // Fetch old sum of radiance sample
