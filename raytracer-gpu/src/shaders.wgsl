@@ -109,6 +109,10 @@ fn no_intersection() -> Intersection {
     return Intersection(vec3f(), -1.0);
 }
 
+fn is_intersection_valid(hit: Intersection) -> bool {
+    return hit.t > 0.0;
+}
+
 
 // Substituting the ray equation inside the sphere equation we get
 //     (P + tD - C)·(P + tD - C) = r²
@@ -152,6 +156,21 @@ fn intersect_sphere(ray: Ray, sphere: Sphere) -> Intersection {
     return Intersection(normal, t);
 }
 
+fn intersect_scene(ray: Ray) -> Intersection {
+    var closest_hit = Intersection(vec3f(), FLT_MAX);
+    for (var i = 0u; i < OBJECT_COUNT; i += 1u) {
+        let sphere = scene[i];
+
+        let hit = intersect_sphere(ray, sphere);
+        if hit.t > 0.0 && hit.t < closest_hit.t {
+            closest_hit = hit;
+        }
+    }
+    if closest_hit.t < FLT_MAX {
+        return closest_hit;
+    }
+    return no_intersection();
+}
 
 fn sky_color(ray: Ray) -> vec3f {
     let t = 0.5 * (normalize(ray.direction).y + 1.0);
@@ -174,21 +193,12 @@ fn sky_color(ray: Ray) -> vec3f {
 
     let direction = vec3f(uv, -focus_distance);
     let ray = Ray(origin, direction);
-
-    var closest_hit = Intersection(vec3f(), FLT_MAX);
-    for (var i = 0u; i < OBJECT_COUNT; i += 1u) {
-        let sphere = scene[i];
-
-        let hit = intersect_sphere(ray, sphere);
-        if hit.t > 0.0 && hit.t < closest_hit.t {
-            closest_hit = hit;
-        }
-    }
+    let hit = intersect_scene(ray);
 
     var radiance_sample: vec3f;
-    if closest_hit.t < FLT_MAX {
+    if is_intersection_valid(hit) {
         // Color according to normal (shifting range from [0, 1] to [-1, 1])
-        radiance_sample = vec3f(0.5 * closest_hit.normal + vec3f(0.5));
+        radiance_sample = vec3f(0.5 * hit.normal + vec3f(0.5));
     } else {
         radiance_sample = sky_color(ray);
     }
