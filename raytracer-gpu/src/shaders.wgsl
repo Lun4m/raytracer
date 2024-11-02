@@ -1,12 +1,12 @@
 const FLT_MAX: f32 = 3.40282346638528859812e+38;
-const MAX_PATH_LENGTH: u32 = 6;
+const MAX_PATH_LENGTH: u32 = 15;
 const OBJECT_COUNT: u32 = 2;
 const EPSILON: f32 = 1e-3;
 
 alias Scene = array<Sphere, OBJECT_COUNT>;
 var<private> scene: Scene = Scene(
-    Sphere( /*center*/ vec3(0.0, 0.0, -1.0), /*radius*/ 0.5),
-    Sphere( /*center*/ vec3(0.0, -100.5, -1.0), /*radius*/ 100.0),
+    Sphere( /*center*/ vec3f(0.0, 0.0, -1.0), /*radius*/ 0.5),
+    Sphere( /*center*/ vec3f(0.0, -100.5, -1.0), /*radius*/ 100.0),
 );
 
 
@@ -100,7 +100,7 @@ struct Scatter {
 fn scatter(input_ray: Ray, hit: Intersection) -> Scatter {
     let reflected = reflect(input_ray.direction, hit.normal);
     let output_ray = Ray(point_on_ray(input_ray, hit.t), reflected);
-    let attenuation = vec3(0.4);
+    let attenuation = vec3f(1.0);
     return Scatter(attenuation, output_ray);
 }
 
@@ -207,7 +207,7 @@ fn sky_color(ray: Ray) -> vec3f {
 
     let direction = vec3f(uv, -focus_distance);
     var ray = Ray(origin, direction);
-    var throughput = vec3(1.0);
+    var throughput = vec3f(1.0);
     var radiance_sample = vec3f();
 
     var path_lenght = 0u;
@@ -237,6 +237,7 @@ fn sky_color(ray: Ray) -> vec3f {
     let new_sum = radiance_sample + old_sum;
     textureStore(radiance_samples_new, vec2u(pos.xy), vec4f(new_sum, 0.0));
 
-    // Display average
-    return vec4f(new_sum / f32(uniforms.frame_count), 1.0);
+    // Display average after gamma correction (gamma = 2.2)
+    let color = new_sum / f32(uniforms.frame_count);
+    return vec4f(pow(color, vec3f(1.0 / 2.2)), 1.0);
 }
