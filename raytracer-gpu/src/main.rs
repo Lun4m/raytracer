@@ -18,7 +18,7 @@ const HEIGHT: u32 = 600;
 async fn connect_to_gpu<'a>(
     window: Arc<Window>,
 ) -> Result<(wgpu::Device, wgpu::Queue, wgpu::Surface<'a>)> {
-    use wgpu::TextureFormat::{Bgra8Unorm, Rgba8Unorm};
+    use wgpu::TextureFormat::{Bgra8UnormSrgb, Rgba8UnormSrgb};
 
     // Create wgpu API entry point
     let instance = wgpu::Instance::default();
@@ -47,8 +47,8 @@ async fn connect_to_gpu<'a>(
     let format = caps
         .formats
         .into_iter()
-        .find(|it| matches!(it, Rgba8Unorm | Bgra8Unorm))
-        .context("could not find preferred texture format (Rgba8Unorm or Bgra8Unorm)")?;
+        .find(|it| matches!(it, Rgba8UnormSrgb | Bgra8UnormSrgb))
+        .context("could not find preferred texture format (Rgba9Unorm or Bgra8Unorm)")?;
     let size = window.inner_size();
     let config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,

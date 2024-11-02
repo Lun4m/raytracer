@@ -237,7 +237,7 @@ fn sky_color(ray: Ray) -> vec3f {
     let new_sum = radiance_sample + old_sum;
     textureStore(radiance_samples_new, vec2u(pos.xy), vec4f(new_sum, 0.0));
 
-    // Display average after gamma correction (gamma = 2.2)
+    // Display average
     let color = new_sum / f32(uniforms.frame_count);
-    return vec4f(pow(color, vec3f(1.0 / 2.2)), 1.0);
+    return vec4f(color, 1.0);
 }
