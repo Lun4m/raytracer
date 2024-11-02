@@ -32,6 +32,52 @@ struct Uniforms {
 @group(0) @binding(1) var radiance_samples_old: texture_2d<f32>;
 @group(0) @binding(2) var radiance_samples_new: texture_storage_2d<rgba32float, write>;
 
+// XORshitf RNG
+struct Rng {
+    state: u32,
+}
+// thread local Rng
+var<private> rng: Rng;
+
+fn init_rng(pixel: vec2u) {
+    // Seed PRNG with scalar index of the pixel and current frame count
+    let seed = (pixel.x + pixel.y * uniforms.width) ^ jenkins_hash(uniforms.frame_count);
+    rng.state = jenkins_hash(seed);
+}
+
+fn jenkins_hash(i: u32) -> u32 {
+    var x = i;
+    x += x << 10u;
+    x ^= x >> 6u;
+    x += x << 3u;
+    x ^= x >> 11u;
+    x += x << 15u;
+    return x;
+}
+
+// 32 bit "xor" function from "Xorshift RNGs"
+fn xor_shift_32() -> u32 {
+    var x = rng.state;
+    x ^= x << 13u;
+    x ^= x >> 17u;
+    x ^= x << 5u;
+    rng.state = x;
+    return x;
+}
+
+// Returns a random float in the range [0...1].
+//
+// This sets the floating point exponent to zero and sets the most significant
+// 23 bits of a random 32-bit unsigned integer as the mantissa.
+//
+// That generates a number in the range [1, 1.9999999],
+// which is then mapped to [0, 0.9999999] by subtraction.
+//
+// See Ray Tracing Gems II, Section 14.3.4.
+fn rand_f32() -> f32 {
+    return bitcast<f32>(0x3f800000u | (xor_shift_32() >> 9u)) - 1.0;
+}
+
 // A ray can be described as a simple line
 //     Y = P + tD
 // where P is the ray origin and D the ray direction.
@@ -113,15 +159,14 @@ fn sky_color(ray: Ray) -> vec3f {
 }
 
 @fragment fn display_fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
+    init_rng(vec2u(pos.xy));
+
     let origin = vec3f();
     let focus_distance = 1.;
     let aspect_ratio = f32(uniforms.width) / f32(uniforms.height);
 
     // Offset and normalize viewport coords
-    let offset = vec2f(
-        f32(uniforms.frame_count % 4) * 0.25 - 0.5,
-        f32((uniforms.frame_count % 16) / 4) * 0.25 - 0.5,
-    );
+    let offset = vec2f(rand_f32() - 0.5, rand_f32() - 0.5);
     var uv = (pos.xy + offset) / vec2f(f32(uniforms.width - 1u), f32(uniforms.height - 1u));
 
     // Map uv from normalized viewport coords (y-down) to camera coords
