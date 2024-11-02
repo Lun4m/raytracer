@@ -24,7 +24,12 @@ var<private> vertices: TriangleVertices = TriangleVertices(
     return vec4f(vertices[vid], 0.0, 1.0);
 }
 
+struct CameraUniforms {
+    origin: vec3f,
+}
+
 struct Uniforms {
+    camera: CameraUniforms,
     width: u32,
     height: u32,
     frame_count: u32,
@@ -196,7 +201,7 @@ fn sky_color(ray: Ray) -> vec3f {
 @fragment fn display_fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
     init_rng(vec2u(pos.xy));
 
-    let origin = vec3f();
+    let origin = uniforms.camera.origin;
     let focus_distance = 1.;
     let aspect_ratio = f32(uniforms.width) / f32(uniforms.height);
 

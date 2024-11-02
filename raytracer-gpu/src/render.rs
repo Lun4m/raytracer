@@ -1,19 +1,29 @@
 use bytemuck::{Pod, Zeroable};
 
+use crate::{
+    algebra::Vec3,
+    camera::{Camera, CameraUniforms},
+};
+
 #[derive(Clone, Copy, Pod, Zeroable, Debug)]
 #[repr(C)]
 struct Uniforms {
+    camera: CameraUniforms,
     width: u32,
     height: u32,
     frame_count: u32,
+    // Padding needed for WGSL alignement
+    _pad: u32,
 }
 
 impl Uniforms {
-    fn new(width: u32, height: u32) -> Self {
+    fn new(camera: CameraUniforms, width: u32, height: u32) -> Self {
         Self {
+            camera,
             width,
             height,
             frame_count: 0,
+            _pad: 0,
         }
     }
 }
@@ -35,7 +45,8 @@ impl PathTracer {
         let shader_module = compile_shader_module(&device);
         let (display_pipeline, display_layout) = create_display_pipeline(&device, &shader_module);
 
-        let uniforms = Uniforms::new(width, height);
+        let camera = Camera::new(Vec3::new(0.0, -0.5, 1.0));
+        let uniforms = Uniforms::new(*camera.uniforms(), width, height);
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("uniforms"),
             size: std::mem::size_of::<Uniforms>() as u64,
@@ -144,8 +155,8 @@ impl PathTracer {
 
     pub fn render_frame(&mut self, target: &wgpu::TextureView) {
         // TODO: this could eventually overflow
-        self.uniforms.frame_count += 1;
         // if self.uniforms.frame_count < 100_000_000 {
+        self.uniforms.frame_count += 1;
         // }
 
         self.queue
