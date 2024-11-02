@@ -5,8 +5,8 @@ const EPSILON: f32 = 1e-3;
 
 alias Scene = array<Sphere, OBJECT_COUNT>;
 var<private> scene: Scene = Scene(
-    Sphere( /*center*/ vec3f(0.0, 0.0, -1.0), /*radius*/ 0.5),
-    Sphere( /*center*/ vec3f(0.0, -100.5, -1.0), /*radius*/ 100.0),
+    Sphere(vec3f(0.0, 0.0, -1.0), 0.5, vec3f(0.5, 0.4, 0.0)),
+    Sphere(vec3f(0.0, -100.5, -1.0), 100.0, vec3f(0.7, 0.4, 0.6)),
 );
 
 
@@ -100,7 +100,7 @@ struct Scatter {
 fn scatter(input_ray: Ray, hit: Intersection) -> Scatter {
     let reflected = reflect(input_ray.direction, hit.normal);
     let output_ray = Ray(point_on_ray(input_ray, hit.t), reflected);
-    let attenuation = vec3f(1.0);
+    let attenuation = hit.color;
     return Scatter(attenuation, output_ray);
 }
 
@@ -111,16 +111,18 @@ fn scatter(input_ray: Ray, hit: Intersection) -> Scatter {
 struct Sphere {
     center: vec3f,
     radius: f32,
+    color: vec3f,
 }
 
 
 struct Intersection {
     normal: vec3f,
     t: f32,
+    color: vec3f,
 }
 
 fn no_intersection() -> Intersection {
-    return Intersection(vec3f(), -1.0);
+    return Intersection(vec3f(), -1.0, vec3f());
 }
 
 fn is_intersection_valid(hit: Intersection) -> bool {
@@ -167,11 +169,11 @@ fn intersect_sphere(ray: Ray, sphere: Sphere) -> Intersection {
 
     let p = point_on_ray(ray, t);
     let normal = (p - sphere.center) / sphere.radius;
-    return Intersection(normal, t);
+    return Intersection(normal, t, sphere.color);
 }
 
 fn intersect_scene(ray: Ray) -> Intersection {
-    var closest_hit = Intersection(vec3f(), FLT_MAX);
+    var closest_hit = Intersection(vec3f(), FLT_MAX, vec3f());
     for (var i = 0u; i < OBJECT_COUNT; i += 1u) {
         let sphere = scene[i];
 
