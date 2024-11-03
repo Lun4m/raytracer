@@ -5,9 +5,9 @@ use {
     std::sync::Arc,
     winit::{
         application::ApplicationHandler,
-        event::{DeviceEvent, MouseScrollDelta, WindowEvent},
+        event::{DeviceEvent, ElementState, MouseScrollDelta, WindowEvent},
         event_loop::{ControlFlow, EventLoop},
-        keyboard::Key,
+        keyboard::{KeyCode, PhysicalKey},
         window::Window,
     },
 };
@@ -76,6 +76,20 @@ struct App<'a> {
     surface: Option<wgpu::Surface<'a>>,
     renderer: Option<render::PathTracer>,
     camera: camera::Camera,
+    // key_press_map: HashMap<&'a str, bool>,
+    mouse_button_pressed: bool,
+}
+
+impl<'a> App<'a> {
+    pub fn new(camera: camera::Camera) -> App<'a> {
+        App {
+            window: None,
+            surface: None,
+            renderer: None,
+            camera,
+            mouse_button_pressed: false,
+        }
+    }
 }
 
 impl<'a> ApplicationHandler for App<'a> {
@@ -91,12 +105,6 @@ impl<'a> ApplicationHandler for App<'a> {
 
         let (device, queue, surface) = pollster::block_on(connect_to_gpu(window)).unwrap();
         let renderer = render::PathTracer::new(device, queue, WIDTH, HEIGHT);
-
-        self.camera = Camera::look_at(
-            Vec3::new(0.0, 0.75, 1.0),
-            Vec3::new(0.0, -0.5, -1.0),
-            Vec3::new(0.0, 1.0, 0.0),
-        );
 
         self.surface = Some(surface);
         self.renderer = Some(renderer);
@@ -131,26 +139,55 @@ impl<'a> ApplicationHandler for App<'a> {
                 self.window.as_ref().unwrap().request_redraw();
             }
             WindowEvent::KeyboardInput { event, .. } => {
-                if let Key::Named(winit::keyboard::NamedKey::Escape) = event.logical_key {
-                    event_loop.exit()
-                }
+                match event.physical_key {
+                    PhysicalKey::Code(KeyCode::Escape) => event_loop.exit(),
+                    PhysicalKey::Code(KeyCode::KeyW) => {
+                        self.camera.pan(0.0, 0.01);
+                    }
+                    PhysicalKey::Code(KeyCode::KeyS) => {
+                        self.camera.pan(0.0, -0.01);
+                    }
+                    PhysicalKey::Code(KeyCode::KeyD) => {
+                        self.camera.pan(0.01, 0.0);
+                    }
+                    PhysicalKey::Code(KeyCode::KeyA) => {
+                        self.camera.pan(-0.01, 0.0);
+                    }
+                    _ => (),
+                };
+                self.renderer.as_mut().unwrap().reset_samples();
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                let delta = match delta {
+                    MouseScrollDelta::PixelDelta(delta) => 0.001 * delta.y as f32,
+                    MouseScrollDelta::LineDelta(_, y) => 0.1 * y,
+                };
+                self.camera.zoom(delta);
+                self.renderer.as_mut().unwrap().reset_samples();
             }
             _ => (),
         }
     }
+
     fn device_event(
         &mut self,
         _event_loop: &winit::event_loop::ActiveEventLoop,
         _device_id: winit::event::DeviceId,
         event: winit::event::DeviceEvent,
     ) {
-        if let DeviceEvent::MouseWheel { delta } = event {
-            let delta = match delta {
-                MouseScrollDelta::PixelDelta(delta) => 0.001 * delta.y as f32,
-                MouseScrollDelta::LineDelta(_, y) => 0.1 * y,
-            };
-            self.camera.zoom(delta);
-            self.renderer.as_mut().unwrap().reset_samples();
+        match event {
+            // This is broken on WSL, deltas are not relative to the window
+            DeviceEvent::MouseMotion { delta: (dx, dy) } => {
+                if self.mouse_button_pressed {
+                    println!("Mouse moved by: ({}, {})", dx, dy);
+                    self.camera.pan(dx * 0.0001, dy * 0.0001);
+                    self.renderer.as_mut().unwrap().reset_samples();
+                }
+            }
+            DeviceEvent::Button { state, .. } => {
+                self.mouse_button_pressed = state == ElementState::Pressed;
+            }
+            _ => (),
         }
     }
 }
@@ -160,7 +197,13 @@ async fn main() -> Result<()> {
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut app = App::default();
+    let camera = Camera::look_at(
+        Vec3::new(0.0, 0.75, 1.0),
+        Vec3::new(0.0, -0.5, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    );
+
+    let mut app = App::new(camera);
     event_loop.run_app(&mut app)?;
 
     Ok(())

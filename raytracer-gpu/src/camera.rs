@@ -48,4 +48,9 @@ impl Camera {
     pub fn zoom(&mut self, displacement: f32) {
         self.uniforms.origin += displacement * self.uniforms.w;
     }
+
+    pub fn pan(&mut self, du: f64, dv: f64) {
+        let displacement = du as f32 * self.uniforms.u + dv as f32 * self.uniforms.v;
+        self.uniforms.origin += displacement;
+    }
 }
