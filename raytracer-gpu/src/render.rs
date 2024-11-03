@@ -1,9 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 
-use crate::{
-    algebra::Vec3,
-    camera::{Camera, CameraUniforms},
-};
+use crate::camera::{Camera, CameraUniforms};
 
 #[derive(Clone, Copy, Pod, Zeroable, Debug)]
 #[repr(C)]
@@ -17,9 +14,9 @@ struct Uniforms {
 }
 
 impl Uniforms {
-    fn new(camera: CameraUniforms, width: u32, height: u32) -> Self {
+    fn new(width: u32, height: u32) -> Self {
         Self {
-            camera,
+            camera: CameraUniforms::zeroed(),
             width,
             height,
             frame_count: 0,
@@ -45,13 +42,7 @@ impl PathTracer {
         let shader_module = compile_shader_module(&device);
         let (display_pipeline, display_layout) = create_display_pipeline(&device, &shader_module);
 
-        let camera = Camera::look_at(
-            Vec3::new(0.0, 0.75, 1.0),
-            Vec3::new(0.0, -0.5, -1.0),
-            Vec3::new(0.0, 1.0, 0.0),
-        );
-
-        let uniforms = Uniforms::new(*camera.uniforms(), width, height);
+        let uniforms = Uniforms::new(width, height);
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("uniforms"),
             size: std::mem::size_of::<Uniforms>() as u64,
@@ -157,12 +148,17 @@ impl PathTracer {
             }),
         ]
     }
+    pub fn reset_samples(&mut self) {
+        self.uniforms.frame_count = 0;
+    }
 
-    pub fn render_frame(&mut self, target: &wgpu::TextureView) {
+    pub fn render_frame(&mut self, camera: &Camera, target: &wgpu::TextureView) {
         // TODO: this could eventually overflow
         // if self.uniforms.frame_count < 100_000_000 {
         self.uniforms.frame_count += 1;
         // }
+
+        self.uniforms.camera = *camera.uniforms();
 
         self.queue
             .write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(&self.uniforms));

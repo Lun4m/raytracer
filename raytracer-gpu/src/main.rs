@@ -1,9 +1,11 @@
 use {
+    algebra::Vec3,
     anyhow::{Context, Result},
+    camera::Camera,
     std::sync::Arc,
     winit::{
         application::ApplicationHandler,
-        event::WindowEvent,
+        event::{DeviceEvent, MouseScrollDelta, WindowEvent},
         event_loop::{ControlFlow, EventLoop},
         keyboard::Key,
         window::Window,
@@ -73,6 +75,7 @@ struct App<'a> {
     window: Option<Arc<Window>>,
     surface: Option<wgpu::Surface<'a>>,
     renderer: Option<render::PathTracer>,
+    camera: camera::Camera,
 }
 
 impl<'a> ApplicationHandler for App<'a> {
@@ -89,6 +92,12 @@ impl<'a> ApplicationHandler for App<'a> {
         let (device, queue, surface) = pollster::block_on(connect_to_gpu(window)).unwrap();
         let renderer = render::PathTracer::new(device, queue, WIDTH, HEIGHT);
 
+        self.camera = Camera::look_at(
+            Vec3::new(0.0, 0.75, 1.0),
+            Vec3::new(0.0, -0.5, -1.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        );
+
         self.surface = Some(surface);
         self.renderer = Some(renderer);
     }
@@ -104,7 +113,7 @@ impl<'a> ApplicationHandler for App<'a> {
             WindowEvent::RedrawRequested => {
                 let frame: wgpu::SurfaceTexture = self
                     .surface
-                    .as_mut()
+                    .as_ref()
                     .unwrap()
                     .get_current_texture()
                     .expect("should be able to get current texture");
@@ -113,7 +122,10 @@ impl<'a> ApplicationHandler for App<'a> {
                     .texture
                     .create_view(&wgpu::TextureViewDescriptor::default());
 
-                self.renderer.as_mut().unwrap().render_frame(&render_target);
+                self.renderer
+                    .as_mut()
+                    .unwrap()
+                    .render_frame(&self.camera, &render_target);
 
                 frame.present();
                 self.window.as_ref().unwrap().request_redraw();
@@ -124,6 +136,21 @@ impl<'a> ApplicationHandler for App<'a> {
                 }
             }
             _ => (),
+        }
+    }
+    fn device_event(
+        &mut self,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+        _device_id: winit::event::DeviceId,
+        event: winit::event::DeviceEvent,
+    ) {
+        if let DeviceEvent::MouseWheel { delta } = event {
+            let delta = match delta {
+                MouseScrollDelta::PixelDelta(delta) => 0.001 * delta.y as f32,
+                MouseScrollDelta::LineDelta(_, y) => 0.1 * y,
+            };
+            self.camera.zoom(delta);
+            self.renderer.as_mut().unwrap().reset_samples();
         }
     }
 }

@@ -3,7 +3,7 @@ use bytemuck::{Pod, Zeroable};
 use crate::algebra::Vec3;
 
 // State shared with GPU
-#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[derive(Debug, Default, Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct CameraUniforms {
     origin: Vec3,
@@ -16,7 +16,7 @@ pub struct CameraUniforms {
     _pad3: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Camera {
     uniforms: CameraUniforms,
 }
@@ -43,5 +43,9 @@ impl Camera {
 
     pub fn uniforms(&self) -> &CameraUniforms {
         &self.uniforms
+    }
+
+    pub fn zoom(&mut self, displacement: f32) {
+        self.uniforms.origin += displacement * self.uniforms.w;
     }
 }
