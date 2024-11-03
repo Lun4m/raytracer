@@ -45,7 +45,12 @@ impl PathTracer {
         let shader_module = compile_shader_module(&device);
         let (display_pipeline, display_layout) = create_display_pipeline(&device, &shader_module);
 
-        let camera = Camera::new(Vec3::new(0.0, -0.5, 1.0));
+        let camera = Camera::look_at(
+            Vec3::new(0.0, 0.75, 1.0),
+            Vec3::new(0.0, -0.5, -1.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        );
+
         let uniforms = Uniforms::new(*camera.uniforms(), width, height);
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("uniforms"),

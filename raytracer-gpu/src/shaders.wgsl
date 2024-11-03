@@ -26,6 +26,10 @@ var<private> vertices: TriangleVertices = TriangleVertices(
 
 struct CameraUniforms {
     origin: vec3f,
+    // Camera basis vectors
+    u: vec3f,
+    v: vec3f,
+    w: vec3f,
 }
 
 struct Uniforms {
@@ -212,7 +216,11 @@ fn sky_color(ray: Ray) -> vec3f {
     // Map uv from normalized viewport coords (y-down) to camera coords
     uv = (2.0 * uv - vec2f(1.0)) * vec2f(aspect_ratio, -1.0);
 
-    let direction = vec3f(uv, -focus_distance);
+    // Compute scene-space ray direction by rotating
+    // the camera-space vector into a new basis
+    let camera_rotation = mat3x3(uniforms.camera.u, uniforms.camera.v, uniforms.camera.w);
+    let direction = camera_rotation * vec3(uv, focus_distance);
+
     var ray = Ray(origin, direction);
     var throughput = vec3f(1.0);
     var radiance_sample = vec3f();
