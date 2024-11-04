@@ -1,12 +1,14 @@
 const FLT_MAX: f32 = 3.40282346638528859812e+38;
 const MAX_PATH_LENGTH: u32 = 15;
-const OBJECT_COUNT: u32 = 2;
 const EPSILON: f32 = 1e-3;
 
+const OBJECT_COUNT: u32 = 4;
 alias Scene = array<Sphere, OBJECT_COUNT>;
 var<private> scene: Scene = Scene(
-    Sphere(vec3f(0.0, 0.0, -1.0), 0.5, vec3f(0.5, 0.4, 0.0)),
-    Sphere(vec3f(0.0, -100.5, -1.0), 100.0, vec3f(0.7, 0.4, 0.6)),
+    Sphere(vec3(1., 0., -1.), 0.5, vec3(0.5, 0.4, 0.)),
+    Sphere(vec3(-1., 0., -1.), 0.5, vec3(0.2, 0.5, 0.2)),
+    Sphere(vec3(0., -1.1, -1.), 0.5, vec3(0.7, 0.4, 0.6)),
+    Sphere(vec3(0., 1.1, -1.), 0.5, vec3(0.2, 0.2, 1.)),
 );
 
 
