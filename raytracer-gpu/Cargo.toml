@@ -7,7 +7,8 @@ edition.workspace = true
 [dependencies]
 wgpu = "22.1.0"
 # wayland doesn't compile inside WSL
-winit = { version = "0.30.5", default_features = false, features = ["rwh_06", "x11", "ahash", "bytemuck", "memmap2", "percent-encoding", "sctk", "sctk-adwaita"] }
+# winit = { version = "0.30.5", default_features = false, features = ["rwh_06", "x11", "ahash", "bytemuck", "memmap2", "percent-encoding", "sctk", "sctk-adwaita"] }
+winit = "0.30.5"
 anyhow = "1.0.89"
 bytemuck = { version = "1.18.0", features = ["derive"] }
 pollster = { version = "0.3.0", features = ["macro"] }

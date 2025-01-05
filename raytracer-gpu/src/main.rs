@@ -5,7 +5,7 @@ use {
     std::{f32::consts::FRAC_PI_2, sync::Arc},
     winit::{
         application::ApplicationHandler,
-        event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent},
+        event::{DeviceEvent, ElementState, MouseButton, MouseScrollDelta, WindowEvent},
         event_loop::{ControlFlow, EventLoop},
         keyboard::{KeyCode, PhysicalKey},
         window::Window,
@@ -189,31 +189,29 @@ impl<'a> ApplicationHandler for App<'a> {
         }
     }
 
-    // TODO: This is broken on WSL, deltas are not relative to the window
-    // fn device_event(
-    //     &mut self,
-    //     _event_loop: &winit::event_loop::ActiveEventLoop,
-    //     _device_id: winit::event::DeviceId,
-    //     event: winit::event::DeviceEvent,
-    // ) {
-    //     if let DeviceEvent::MouseMotion { delta: (dx, dy) } = event {
-    //         let dx = dx as f32 * 0.0001;
-    //         let dy = dy as f32 * -0.0001;
-    //
-    //         // TODO: these should not reset zoom
-    //         if self.left_mouse_button_pressed {
-    //             println!("left moved by: ({}, {})", dx, dy);
-    //             self.camera.orbit(dx, dy);
-    //             self.renderer.as_mut().unwrap().reset_samples();
-    //         }
-    //
-    //         if self.right_mouse_button_pressed {
-    //             println!("right moved by: ({}, {})", dx, dy);
-    //             self.camera.pan(dx, dy);
-    //             self.renderer.as_mut().unwrap().reset_samples();
-    //         }
-    //     }
-    // }
+    // NOTE: This is broken on WSL, deltas are not relative to the window
+    // The workaround is to compile targeting windows
+    fn device_event(
+        &mut self,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+        _device_id: winit::event::DeviceId,
+        event: winit::event::DeviceEvent,
+    ) {
+        if let DeviceEvent::MouseMotion { delta: (dx, dy) } = event {
+            let dx = dx as f32 * 0.001;
+            let dy = dy as f32 * -0.001;
+
+            if self.left_mouse_button_pressed {
+                self.camera.orbit(dx, dy);
+                self.renderer.as_mut().unwrap().reset_samples();
+            }
+
+            if self.right_mouse_button_pressed {
+                self.camera.pan(dx, dy);
+                self.renderer.as_mut().unwrap().reset_samples();
+            }
+        }
+    }
 }
 
 #[pollster::main]
